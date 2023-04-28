@@ -1,9 +1,8 @@
-use std::fs::File;
+use std::env;
 
-use actix_test::board_heatmap;
+use actix_test::{board_heatmap, ApplicationState};
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
-use ndarray::{s, Array4};
-use ndarray_npy::ReadNpyExt;
+use ndarray::s;
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -12,14 +11,15 @@ async fn hello() -> impl Responder {
 }
 
 #[get("/L{layer_index}/N{neuron_index}")]
-async fn echo(path: web::Path<(usize, usize)>) -> impl Responder {
+async fn echo(
+    data: web::Data<ApplicationState>,
+    path: web::Path<(usize, usize)>,
+) -> impl Responder {
     let (layer_index, neuron_index) = path.into_inner();
 
-    let path = "heatmaps_my.npy";
-    let file = File::open(path).unwrap();
-    let array = Array4::<f32>::read_npy(file).unwrap();
+    let ownership_heatmaps = data.ownership_heatmaps();
 
-    let values = array
+    let values = ownership_heatmaps
         .slice(s![layer_index, neuron_index, .., ..])
         .to_owned();
 
@@ -32,8 +32,13 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    let path = env::args().nth(1).unwrap();
+
+    let state = ApplicationState::new(path);
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(web::Data::new(state.clone()))
             .service(hello)
             .service(echo)
             .route("/hey", web::get().to(manual_hello))
