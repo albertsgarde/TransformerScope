@@ -1,8 +1,9 @@
 use std::env;
 
-use actix_test::{board_heatmap, ApplicationState};
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use maud::html;
 use ndarray::s;
+use transformer_scope::{board_heatmap, ApplicationState};
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -23,7 +24,14 @@ async fn echo(
         .slice(s![layer_index, neuron_index, .., ..])
         .to_owned();
 
-    board_heatmap::board_heatmap(&values)
+    let heatmap_html = board_heatmap::board_heatmap(&values);
+    html! {
+        head {
+            meta charset="utf-8";
+            title { "Transformer Scope - Layer " (layer_index) " Neuron " (neuron_index)}
+        }
+        (heatmap_html)
+    }
 }
 
 async fn manual_hello() -> impl Responder {
