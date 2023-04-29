@@ -1,6 +1,6 @@
+mod data;
 pub mod html;
-mod payload;
-pub use payload::Payload;
+pub use data::Payload;
 mod state;
 pub use state::ApplicationState;
 
