@@ -1,6 +1,2 @@
 [workspace]
-
-members = [
-    "transformer-scope",
-    "transformer-scope-py"
-]
+members = ["transformer-scope", "transformer-scope-server"]

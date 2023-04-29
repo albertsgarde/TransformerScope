@@ -1,15 +1,12 @@
 [package]
-name = "transformer-scope-py"
+name = "transformer-scope-server"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-name = "transformer_scope_py"
-crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.18.1"
+actix-web = "4.3.1"
+maud = { version = "0.25.0", features = ["actix-web"] }
 
 transformer-scope = { path = "../transformer-scope" }
-
