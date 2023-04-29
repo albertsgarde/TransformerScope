@@ -1,12 +1,12 @@
 use std::{fs::File, path::Path};
 
-use ndarray::{ArrayView2, ArrayView4};
+use ndarray::ArrayView2;
 
 use serde::{Deserialize, Serialize};
 
 use crate::html::template::NeuronTemplate;
 
-use super::{values::Values, Value};
+use super::values::Values;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Payload {
@@ -47,20 +47,6 @@ impl Payload {
 
     pub fn num_neurons(&self) -> usize {
         self.num_mlp_neurons
-    }
-
-    pub fn ownership_heatmaps(&self) -> ArrayView4<f32> {
-        match &self.values.neuron_values["ownership_heatmap"] {
-            Value::Table(array) => array.view(),
-            _ => panic!("Ownership heatmap is the wrong type."),
-        }
-    }
-
-    pub fn blank_heatmaps(&self) -> ArrayView4<f32> {
-        match &self.values.neuron_values["blank_heatmap"] {
-            Value::Table(array) => array.view(),
-            _ => panic!("Blank heatmap is the wrong type."),
-        }
     }
 
     pub fn ranked_neurons(&self) -> ArrayView2<f32> {

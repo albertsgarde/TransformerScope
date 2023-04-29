@@ -28,8 +28,8 @@ fn generate_site_in_dir_inner(path: &Path, payload: &Payload) {
     .unwrap();
 
     // Generate site.
-    let ownership_heatmaps = payload.ownership_heatmaps();
-    let (layer_count, neuron_count, _, _) = ownership_heatmaps.dim();
+    let layer_count = payload.num_layers();
+    let neuron_count = payload.num_neurons();
     for layer_index in 0..layer_count {
         println!("Generating pages for neurons in layer {layer_index}...");
         let layer_path = path.join(format!("L{layer_index}"));
