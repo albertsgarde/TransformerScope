@@ -11,16 +11,20 @@ use crate::data::neuron_rankings;
 #[derive(Clone)]
 pub struct Payload {
     ownership_heatmaps: Array4<f32>,
+    blank_heatmaps: Array4<f32>,
     neuron_ranks: Array2<usize>,
     ranked_neurons: Array2<usize>,
 }
 
 impl Payload {
-    pub fn new(ownership_heatmaps: Array4<f32>) -> Self {
+    pub fn new(ownership_heatmaps: Array4<f32>, blank_heatmaps: Array4<f32>) -> Self {
+        assert_eq!(ownership_heatmaps.dim(), blank_heatmaps.dim());
+
         let (neuron_ranks, ranked_neurons) =
             neuron_rankings::calculate_neuron_rankings(&ownership_heatmaps);
         Payload {
             ownership_heatmaps,
+            blank_heatmaps,
             neuron_ranks,
             ranked_neurons,
         }
@@ -33,14 +37,12 @@ impl Payload {
             let ownership_heatmap_file = File::open(ownership_heatmap_path).unwrap();
             let ownership_heatmaps = Array4::<f32>::read_npy(ownership_heatmap_file).unwrap();
 
-            let (neuron_ranks, ranked_neurons) =
-                neuron_rankings::calculate_neuron_rankings(&ownership_heatmaps);
+            let blank_heatmap_path = path.join("blank_heatmaps.npy");
 
-            Payload {
-                ownership_heatmaps,
-                neuron_ranks,
-                ranked_neurons,
-            }
+            let blank_heatmap_file = File::open(blank_heatmap_path).unwrap();
+            let blank_heatmaps = Array4::<f32>::read_npy(blank_heatmap_file).unwrap();
+
+            Payload::new(ownership_heatmaps, blank_heatmaps)
         }
         inner(path.as_ref())
     }
@@ -52,6 +54,9 @@ impl Payload {
         self.ownership_heatmaps
             .write_npy(ownership_heatmap_file)
             .unwrap();
+        let blank_heatmap_path = path.join("blank_heatmaps.npy");
+        let blank_heatmap_file = File::create(blank_heatmap_path).unwrap();
+        self.blank_heatmaps.write_npy(blank_heatmap_file).unwrap();
     }
 
     pub fn to_dir<P: AsRef<Path>>(&self, path: P) {
@@ -60,6 +65,10 @@ impl Payload {
 
     pub fn ownership_heatmaps(&self) -> &Array4<f32> {
         &self.ownership_heatmaps
+    }
+
+    pub fn blank_heatmaps(&self) -> &Array4<f32> {
+        &self.blank_heatmaps
     }
 
     pub fn neuron_ranks(&self) -> &Array2<usize> {

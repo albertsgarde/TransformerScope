@@ -11,9 +11,13 @@ struct PyPayload {
 #[pymethods]
 impl PyPayload {
     #[new]
-    pub fn new(ownership_heatmaps: PyReadonlyArray4<f32>) -> Self {
+    pub fn new(
+        ownership_heatmaps: PyReadonlyArray4<f32>,
+        blank_heatmaps: PyReadonlyArray4<f32>,
+    ) -> Self {
         let ownership_heatmaps = ownership_heatmaps.as_array().to_owned();
-        let payload = Payload::new(ownership_heatmaps);
+        let blank_heatmaps = blank_heatmaps.as_array().to_owned();
+        let payload = Payload::new(ownership_heatmaps, blank_heatmaps);
         PyPayload { payload }
     }
 
