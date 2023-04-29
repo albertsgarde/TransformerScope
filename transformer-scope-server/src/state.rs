@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::Payload;
+use transformer_scope::Payload;
 
 #[derive(Clone)]
 pub struct ApplicationState {

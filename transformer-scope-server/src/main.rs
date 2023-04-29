@@ -1,7 +1,13 @@
-use std::env;
+use std::{
+    env,
+    io::{self, Write},
+};
 
 use actix_web::{get, web, App, HttpServer, Responder};
-use transformer_scope::{html, ApplicationState};
+use transformer_scope::html;
+
+mod state;
+use state::ApplicationState;
 
 #[get("/")]
 async fn index(data: web::Data<ApplicationState>) -> impl Responder {
@@ -23,7 +29,10 @@ async fn neuron(
 async fn main() -> std::io::Result<()> {
     let path = env::args().nth(1).unwrap();
 
+    print!("Loading payload...");
+    io::stdout().flush().unwrap();
     let state = ApplicationState::new(path);
+    println!("\rPayload loaded.                  ");
 
     HttpServer::new(move || {
         App::new()
