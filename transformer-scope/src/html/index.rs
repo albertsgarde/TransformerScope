@@ -23,7 +23,7 @@ pub fn generate_index_page(payload: &Payload) -> Markup {
     )
 }
 
-pub fn generate_ranked_neurons_table(ranked_neurons: ArrayView2<usize>) -> Markup {
+pub fn generate_ranked_neurons_table(ranked_neurons: ArrayView2<f32>) -> Markup {
     let (num_layers, _num_neurons) = ranked_neurons.dim();
     html!(
         table {

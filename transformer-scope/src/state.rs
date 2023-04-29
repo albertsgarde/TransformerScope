@@ -13,7 +13,7 @@ impl ApplicationState {
         P: AsRef<Path>,
     {
         fn inner(path: &Path) -> ApplicationState {
-            let payload = Payload::from_dir(path);
+            let payload = Payload::from_file(path);
             ApplicationState { payload }
         }
         inner(path.as_ref())

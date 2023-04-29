@@ -1,7 +1,7 @@
-use ndarray::{s, Array2, Array4, Axis};
+use ndarray::{s, Array2, ArrayView4, Axis};
 
 pub fn calculate_neuron_rankings(
-    ownership_heatmaps: &Array4<f32>,
+    ownership_heatmaps: ArrayView4<f32>,
 ) -> (Array2<usize>, Array2<usize>) {
     let (num_layers, num_neurons, num_rows, num_cols) = ownership_heatmaps.dim();
     assert_eq!(num_rows, 8);

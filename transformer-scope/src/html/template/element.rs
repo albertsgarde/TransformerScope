@@ -43,7 +43,7 @@ impl Element {
                 board_heatmap::board_heatmap(heatmap)
             }
             Element::Value(value) => {
-                let value = payload.get_formatted_value(layer_index, neuron_index, value);
+                let value = payload.get_scalar(layer_index, neuron_index, value);
                 html! {
                     (value)
                 }
