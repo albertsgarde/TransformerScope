@@ -1,18 +1,48 @@
 use maud::{html, Markup};
+use ndarray::{s, ArrayView2, Axis};
 
-use crate::ApplicationState;
+use crate::Payload;
 
-pub fn index_html(_state: &ApplicationState) -> Markup {
-    html! {
+pub fn generate_index_page(payload: &Payload) -> Markup {
+    let ranked_neurons = payload.ranked_neurons();
+
+    html!(
         head {
             meta charset="utf-8";
-            title { "Transformer Scope" }
-            link rel="stylesheet" href="/static/style.css"{};
+            title {"TransformerScope"}
+            link rel="stylesheet" href="static/style.css"{};
         }
         body {
-            h1 { "Transformer Scope" }
+            h1 {"Welcome to TransformerScope!"}
             p { "This is a web app for visualizing various aspects of transformer models." }
-            p { "This page should include an index, but this has not been implemented yet." }
+            p {"Based on the original idea of the "
+            a href="https://neuroscope.io/gelu-3l/0/314.html"{"Neuroscope"} " by Neel
+            Nanda."}
         }
-    }
+        (generate_ranked_neurons_table(ranked_neurons.slice(s![.., ..])))
+    )
+}
+
+pub fn generate_ranked_neurons_table(ranked_neurons: ArrayView2<usize>) -> Markup {
+    let (num_layers, _num_neurons) = ranked_neurons.dim();
+    html!(
+        table {
+            tr {
+                th;
+                @for layer_index in 0..num_layers {
+                    th {(format!("Layer {layer_index}"))}
+                }
+            }
+            @for (rank, neurons_of_rank) in ranked_neurons.axis_iter(Axis(1)).enumerate() {
+                tr {
+                    th {(rank)}
+                    @for (layer_index, neuron_index) in neurons_of_rank.iter().enumerate() {
+                        td{
+                            a href=(format!("L{layer_index}/N{neuron_index}")) {(neuron_index)}
+                        }
+                    }
+                }
+            }
+        }
+    )
 }

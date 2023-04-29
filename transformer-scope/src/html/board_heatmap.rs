@@ -1,5 +1,27 @@
 use maud::{html, Markup};
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
+
+const COLOR_POSITIVE: [f32; 3] = [69., 254., 152.];
+const COLOR_ZERO: [f32; 3] = [0., 0., 0.];
+const COLOR_NEGATIVE: [f32; 3] = [255., 0., 0.];
+
+fn interpolate_color(value: f32) -> [u8; 3] {
+    let interpolation_color = if value > 0. {
+        COLOR_POSITIVE
+    } else {
+        COLOR_NEGATIVE
+    };
+    let interpolation_value = value.abs();
+
+    let mut color = [0u8, 0, 0];
+    for (color_index, color_value) in color.iter_mut().enumerate() {
+        let color_value_float = COLOR_ZERO[color_index]
+            + (interpolation_color[color_index] - COLOR_ZERO[color_index]) * interpolation_value;
+        *color_value = color_value_float.round() as u8;
+    }
+
+    color
+}
 
 pub fn board_heatmap(values: &Array2<f32>) -> Markup {
     html! {
@@ -16,20 +38,11 @@ pub fn board_heatmap(values: &Array2<f32>) -> Markup {
 }
 
 fn board_cell(value: f32, row_index: usize, column_index: usize) -> impl maud::Render {
-    let color_ours = Array1::from_shape_vec(3, vec![69., 254., 152.]).unwrap();
-    let color_blank = Array1::from_shape_vec(3, vec![0., 0., 0.]).unwrap();
-    let color_theirs = Array1::from_shape_vec(3, vec![255., 0., 0.]).unwrap();
-
-    let interpolation_color = if value > 0. { color_ours } else { color_theirs };
-    let interpolation_value = value.abs() * 10.;
-
-    let color = &color_blank + (interpolation_color - &color_blank) * interpolation_value;
-
-    let color_string = format!("rgb({:.0}, {:.0}, {:.0})", color[0], color[1], color[2]);
+    let color = interpolate_color(value * 10.);
 
     html! {
-        td style=(format!("background-color: {}", color_string)) {
-            (format!("{}{}", char::from(b'A' + row_index as u8), column_index + 1))
+        td style={"background-color: rgb("(color[0])", "(color[1])", "(color[2])")"} {
+            (char::from(b'A' + row_index as u8))({column_index + 1})
         }
     }
 }

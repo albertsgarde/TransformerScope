@@ -1,11 +1,10 @@
-use std::{fs::File, path::Path};
+use std::path::Path;
 
-use ndarray::Array4;
-use ndarray_npy::ReadNpyExt;
+use crate::Payload;
 
 #[derive(Clone)]
 pub struct ApplicationState {
-    ownership_heatmaps: Array4<f32>,
+    payload: Payload,
 }
 
 impl ApplicationState {
@@ -14,14 +13,13 @@ impl ApplicationState {
         P: AsRef<Path>,
     {
         fn inner(path: &Path) -> ApplicationState {
-            let file = File::open(path).unwrap();
-            let ownership_heatmaps = Array4::<f32>::read_npy(file).unwrap();
-            ApplicationState { ownership_heatmaps }
+            let payload = Payload::from_dir(path);
+            ApplicationState { payload }
         }
         inner(path.as_ref())
     }
 
-    pub fn ownership_heatmaps(&self) -> &Array4<f32> {
-        &self.ownership_heatmaps
+    pub fn payload(&self) -> &Payload {
+        &self.payload
     }
 }

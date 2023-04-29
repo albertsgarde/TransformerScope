@@ -1,14 +1,19 @@
 use maud::{html, Markup};
 use ndarray::s;
 
-use crate::ApplicationState;
+use crate::Payload;
 
-pub fn neuron_html(layer_index: usize, neuron_index: usize, state: &ApplicationState) -> Markup {
-    let ownership_heatmaps = state.ownership_heatmaps();
+pub fn generate_neuron_page(layer_index: usize, neuron_index: usize, payload: &Payload) -> Markup {
+    let ownership_heatmaps = payload.ownership_heatmaps();
 
     let values = ownership_heatmaps
         .slice(s![layer_index, neuron_index, .., ..])
         .to_owned();
+
+    let neuron_rank = payload
+        .neuron_ranks()
+        .get((layer_index, neuron_index))
+        .unwrap();
 
     let heatmap_html = super::board_heatmap(&values);
     html! {
@@ -18,5 +23,6 @@ pub fn neuron_html(layer_index: usize, neuron_index: usize, state: &ApplicationS
             link rel="stylesheet" href="/static/style.css"{};
         }
         (heatmap_html)
+        p {"This neuron has rank " (neuron_rank) " variance within the layer."}
     }
 }

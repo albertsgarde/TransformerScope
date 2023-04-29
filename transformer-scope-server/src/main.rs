@@ -6,7 +6,7 @@ use transformer_scope::{html, ApplicationState};
 #[get("/")]
 async fn index(data: web::Data<ApplicationState>) -> impl Responder {
     let data = data.as_ref();
-    html::index_html(data)
+    html::generate_index_page(data.payload())
 }
 
 #[get("/L{layer_index}/N{neuron_index}")]
@@ -16,7 +16,7 @@ async fn neuron(
 ) -> impl Responder {
     let (layer_index, neuron_index) = path.into_inner();
 
-    html::neuron_html(layer_index, neuron_index, data.as_ref())
+    html::generate_neuron_page(layer_index, neuron_index, data.payload())
 }
 
 #[actix_web::main]
