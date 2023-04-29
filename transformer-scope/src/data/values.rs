@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ndarray::ArrayView2;
 use serde::{Deserialize, Serialize};
 
-use crate::html::template::{value, Value};
+use super::{value, Value};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Values {

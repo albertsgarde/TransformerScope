@@ -1,9 +1,6 @@
-use crate::{
-    html::template::{value, NeuronTemplate, Value},
-    Payload,
-};
+use crate::{html::template::NeuronTemplate, Payload};
 
-use super::{neuron_rankings, values::Values};
+use super::{neuron_rankings, value, values::Values, Value};
 
 pub struct PayloadBuilder {
     num_layers: usize,

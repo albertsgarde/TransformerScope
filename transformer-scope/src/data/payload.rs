@@ -4,9 +4,9 @@ use ndarray::{ArrayView2, ArrayView4};
 
 use serde::{Deserialize, Serialize};
 
-use crate::html::template::{NeuronTemplate, Value};
+use crate::html::template::NeuronTemplate;
 
-use super::values::Values;
+use super::{values::Values, Value};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Payload {
