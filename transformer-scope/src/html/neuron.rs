@@ -15,6 +15,7 @@ pub fn neuron_html(layer_index: usize, neuron_index: usize, state: &ApplicationS
         head {
             meta charset="utf-8";
             title { "Transformer Scope - Layer " (layer_index) " Neuron " (neuron_index)}
+            link rel="stylesheet" href="/static/style.css"{};
         }
         (heatmap_html)
     }

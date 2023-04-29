@@ -27,6 +27,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .service(actix_files::Files::new("/static", "./static"))
             .app_data(web::Data::new(state.clone()))
             .service(index)
             .service(neuron)

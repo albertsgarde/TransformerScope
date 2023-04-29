@@ -7,6 +7,7 @@ pub fn index_html(_state: &ApplicationState) -> Markup {
         head {
             meta charset="utf-8";
             title { "Transformer Scope" }
+            link rel="stylesheet" href="/static/style.css"{};
         }
         body {
             h1 { "Transformer Scope" }
