@@ -2,8 +2,8 @@ use numpy::borrow::{PyReadonlyArray2, PyReadonlyArray4};
 use pyo3::prelude::*;
 
 use crate::{
-    data::{Payload, PayloadBuilder},
-    html::template::{NeuronTemplate, Value},
+    data::{Payload, PayloadBuilder, Value},
+    html::template::NeuronTemplate,
 };
 
 #[pyclass(name = "ValueType", frozen)]
@@ -70,6 +70,10 @@ impl PyPayloadBuilder {
     pub fn add_neuron_scalar(&mut self, key: &str, value: PyReadonlyArray2<f32>) {
         self.get()
             .add_neuron_value(key, Value::Scalar(value.as_array().to_owned()));
+    }
+
+    pub fn set_rank_values(&mut self, key: &str) {
+        self.get().set_rank_values(key);
     }
 
     pub fn build(&mut self) -> PyPayload {

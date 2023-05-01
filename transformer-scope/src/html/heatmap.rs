@@ -23,7 +23,7 @@ fn interpolate_color(value: f32) -> [u8; 3] {
     color
 }
 
-pub fn board_heatmap<'a, A: AsArray<'a, f32, Ix2>>(values: A) -> Markup {
+pub fn heatmap<'a, A: AsArray<'a, f32, Ix2>>(values: A) -> Markup {
     let values = values.into();
     html! {
         table {

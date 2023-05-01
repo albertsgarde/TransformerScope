@@ -1,23 +1,27 @@
 use std::collections::HashMap;
 
-use ndarray::ArrayView2;
+use ndarray::{ArrayView2, ArrayView4};
 use serde::{Deserialize, Serialize};
 
 use super::{value, Value};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Values {
-    pub global_values: HashMap<String, Value<value::Global>>,
-    pub layer_values: HashMap<String, Value<value::Layer>>,
-    pub neuron_values: HashMap<String, Value<value::Neuron>>,
+    global_values: HashMap<String, Value<value::Global>>,
+    layer_values: HashMap<String, Value<value::Layer>>,
+    neuron_values: HashMap<String, Value<value::Neuron>>,
 }
 
 impl Values {
-    pub fn empty() -> Self {
+    pub(super) fn new(
+        global_values: HashMap<String, Value<value::Global>>,
+        layer_values: HashMap<String, Value<value::Layer>>,
+        neuron_values: HashMap<String, Value<value::Neuron>>,
+    ) -> Self {
         Self {
-            global_values: HashMap::new(),
-            layer_values: HashMap::new(),
-            neuron_values: HashMap::new(),
+            global_values,
+            layer_values,
+            neuron_values,
         }
     }
 
@@ -25,6 +29,14 @@ impl Values {
         self.global_values.contains_key(key)
             || self.layer_values.contains_key(key)
             || self.neuron_values.contains_key(key)
+    }
+
+    pub fn get_neuron_table(&self, key: &str) -> Option<ArrayView4<f32>> {
+        self.neuron_values.get(key).map(|value| {
+            value
+                .get_all_tables()
+                .unwrap_or_else(|| panic!("Value '{key}' is not a table."))
+        })
     }
 
     pub fn get_table(

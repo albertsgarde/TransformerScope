@@ -7,8 +7,8 @@ pub mod template;
 pub use index::generate_index_page;
 mod neuron;
 pub use neuron::generate_neuron_page;
-mod board_heatmap;
-pub use board_heatmap::board_heatmap;
+mod heatmap;
+pub use heatmap::heatmap;
 
 use crate::Payload;
 

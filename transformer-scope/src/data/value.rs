@@ -1,4 +1,4 @@
-use ndarray::{s, Array, ArrayView1, ArrayView2, Dimension, RemoveAxis};
+use ndarray::{s, Array, ArrayView, ArrayView1, ArrayView2, Dimension, RemoveAxis};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::fmt::Debug;
 pub trait ValueLocality: Clone + Copy + Debug + Serialize + DeserializeOwned {
@@ -119,6 +119,25 @@ pub enum Value<L: ValueLocality> {
 }
 
 impl<L: ValueLocality> Value<L> {
+    pub fn get_all_tables(&self) -> Option<ArrayView<f32, L::D2>> {
+        match self {
+            Value::Table(array) => Some(array.view()),
+            _ => None,
+        }
+    }
+    pub fn get_all_arrays(&self) -> Option<ArrayView<f32, L::D1>> {
+        match self {
+            Value::Array(array) => Some(array.view()),
+            _ => None,
+        }
+    }
+    pub fn get_all_scalars(&self) -> Option<ArrayView<f32, L::D0>> {
+        match self {
+            Value::Scalar(array) => Some(array.view()),
+            _ => None,
+        }
+    }
+
     pub fn get_table(&self, layer_index: usize, neuron_index: usize) -> Option<ArrayView2<f32>> {
         match self {
             Value::Table(array) => Some(L::get_neuron_2d(array, layer_index, neuron_index)),
@@ -137,6 +156,14 @@ impl<L: ValueLocality> Value<L> {
         match self {
             Value::Scalar(array) => Some(L::get_neuron_0d(array, layer_index, neuron_index)),
             _ => None,
+        }
+    }
+
+    pub fn type_string(&self) -> &'static str {
+        match self {
+            Value::Table(_) => "table",
+            Value::Array(_) => "array",
+            Value::Scalar(_) => "scalar",
         }
     }
 }

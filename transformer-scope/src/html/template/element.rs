@@ -1,7 +1,7 @@
 use maud::{html, Markup};
 use serde::{Deserialize, Serialize};
 
-use crate::{html::board_heatmap, Payload};
+use crate::{html::heatmap, Payload};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Element {
@@ -40,7 +40,7 @@ impl Element {
         match self {
             Element::Heatmap(heatmap_name) => {
                 let heatmap = payload.get_table(layer_index, neuron_index, heatmap_name);
-                board_heatmap::board_heatmap(heatmap)
+                heatmap::heatmap(heatmap)
             }
             Element::Value(value) => {
                 let value = payload.get_scalar(layer_index, neuron_index, value);

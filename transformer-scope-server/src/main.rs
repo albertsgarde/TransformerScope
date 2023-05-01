@@ -33,6 +33,7 @@ async fn main() -> std::io::Result<()> {
     io::stdout().flush().unwrap();
     let state = ApplicationState::new(path);
     println!("\rPayload loaded.                  ");
+    println!("Serving site...");
 
     HttpServer::new(move || {
         App::new()
