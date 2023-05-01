@@ -1,5 +1,5 @@
 use maud::{html, Markup};
-use ndarray::Array2;
+use ndarray::{AsArray, Ix2};
 
 const COLOR_POSITIVE: [f32; 3] = [69., 254., 152.];
 const COLOR_ZERO: [f32; 3] = [0., 0., 0.];
@@ -23,7 +23,8 @@ fn interpolate_color(value: f32) -> [u8; 3] {
     color
 }
 
-pub fn board_heatmap(values: &Array2<f32>) -> Markup {
+pub fn heatmap<'a, A: AsArray<'a, f32, Ix2>>(values: A) -> Markup {
+    let values = values.into();
     html! {
         table {
             @for (row_index, row) in values.rows().into_iter().enumerate() {

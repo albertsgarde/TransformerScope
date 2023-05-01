@@ -1,72 +1,71 @@
-use std::{
-    fs::{self, File},
-    path::Path,
-};
+use std::{fs::File, path::Path};
 
-use ndarray::{Array2, Array4};
-use ndarray_npy::{ReadNpyExt, WriteNpyExt};
+use ndarray::ArrayView2;
 
-use crate::data::neuron_rankings;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
+use crate::html::template::NeuronTemplate;
+
+use super::values::Values;
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Payload {
-    ownership_heatmaps: Array4<f32>,
-    neuron_ranks: Array2<usize>,
-    ranked_neurons: Array2<usize>,
+    num_layers: usize,
+    num_mlp_neurons: usize,
+
+    mlp_neuron_template: NeuronTemplate,
+
+    values: Values,
 }
 
 impl Payload {
-    pub fn new(ownership_heatmaps: Array4<f32>) -> Self {
-        let (neuron_ranks, ranked_neurons) =
-            neuron_rankings::calculate_neuron_rankings(&ownership_heatmaps);
-        Payload {
-            ownership_heatmaps,
-            neuron_ranks,
-            ranked_neurons,
+    pub fn new(
+        num_layers: usize,
+        num_mlp_neurons: usize,
+        mlp_neuron_template: NeuronTemplate,
+        values: Values,
+    ) -> Self {
+        Self {
+            num_layers,
+            num_mlp_neurons,
+            mlp_neuron_template,
+            values,
         }
     }
 
-    pub fn from_dir<P: AsRef<Path>>(path: P) -> Self {
-        fn inner(path: &Path) -> Payload {
-            let ownership_heatmap_path = path.join("ownership_heatmaps.npy");
-
-            let ownership_heatmap_file = File::open(ownership_heatmap_path).unwrap();
-            let ownership_heatmaps = Array4::<f32>::read_npy(ownership_heatmap_file).unwrap();
-
-            let (neuron_ranks, ranked_neurons) =
-                neuron_rankings::calculate_neuron_rankings(&ownership_heatmaps);
-
-            Payload {
-                ownership_heatmaps,
-                neuron_ranks,
-                ranked_neurons,
-            }
-        }
-        inner(path.as_ref())
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Self {
+        bincode::deserialize_from(File::open(path.as_ref()).unwrap()).unwrap()
     }
 
-    fn to_dir_inner(&self, path: &Path) {
-        fs::create_dir_all(path).unwrap();
-        let ownership_heatmap_path = path.join("ownership_heatmaps.npy");
-        let ownership_heatmap_file = File::create(ownership_heatmap_path).unwrap();
-        self.ownership_heatmaps
-            .write_npy(ownership_heatmap_file)
-            .unwrap();
+    pub fn to_file<P: AsRef<Path>>(&self, path: P) {
+        bincode::serialize_into(File::create(path.as_ref()).unwrap(), self).unwrap();
     }
 
-    pub fn to_dir<P: AsRef<Path>>(&self, path: P) {
-        self.to_dir_inner(path.as_ref())
+    pub fn num_layers(&self) -> usize {
+        self.num_layers
     }
 
-    pub fn ownership_heatmaps(&self) -> &Array4<f32> {
-        &self.ownership_heatmaps
+    pub fn num_neurons(&self) -> usize {
+        self.num_mlp_neurons
     }
 
-    pub fn neuron_ranks(&self) -> &Array2<usize> {
-        &self.neuron_ranks
+    pub fn ranked_neurons(&self) -> ArrayView2<f32> {
+        self.get_table(0, 0, "ranked_neurons")
     }
 
-    pub fn ranked_neurons(&self) -> &Array2<usize> {
-        &self.ranked_neurons
+    pub fn neuron_template(&self) -> &NeuronTemplate {
+        &self.mlp_neuron_template
+    }
+
+    pub fn get_table(&self, layer_index: usize, neuron_index: usize, key: &str) -> ArrayView2<f32> {
+        self.values
+            .get_table(layer_index, neuron_index, key)
+            .unwrap_or_else(|| panic!("Table '{key}' not found."))
+    }
+
+    pub fn get_scalar(&self, layer_index: usize, neuron_index: usize, key: &str) -> f32 {
+        self.values
+            .get_scalar(layer_index, neuron_index, key)
+            .unwrap_or_else(|| panic!("Scalar '{key}' not found."))
     }
 }

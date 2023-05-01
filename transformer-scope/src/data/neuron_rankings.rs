@@ -1,24 +1,14 @@
-use ndarray::{s, Array2, Array4, Axis};
+use ndarray::{Array2, ArrayView2, Axis};
 
 pub fn calculate_neuron_rankings(
-    ownership_heatmaps: &Array4<f32>,
+    ranking_values: ArrayView2<f32>,
 ) -> (Array2<usize>, Array2<usize>) {
-    let (num_layers, num_neurons, num_rows, num_cols) = ownership_heatmaps.dim();
-    assert_eq!(num_rows, 8);
-    assert_eq!(num_cols, 8);
-    let heatmaps = ownership_heatmaps
-        .slice(s![.., .., .., ..])
-        .into_shape((num_layers, num_neurons, 64))
-        .unwrap();
-    let heatmap_stds = heatmaps.std_axis(Axis(2), 0.);
-    let std_shape = heatmap_stds.dim();
-    assert_eq!(std_shape.0, num_layers);
-    assert_eq!(std_shape.1, num_neurons);
+    let (num_layers, num_neurons) = ranking_values.dim();
 
     let mut rankings = Array2::zeros((num_layers, num_neurons));
     let mut ranked_neurons = Array2::zeros((num_layers, num_neurons));
 
-    for ((layer, mut rankings_layer), mut ranked_neurons_layer) in heatmap_stds
+    for ((layer, mut rankings_layer), mut ranked_neurons_layer) in ranking_values
         .axis_iter(Axis(0))
         .zip(rankings.axis_iter_mut(Axis(0)))
         .zip(ranked_neurons.axis_iter_mut(Axis(0)))
