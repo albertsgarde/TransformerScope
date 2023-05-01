@@ -5,12 +5,12 @@ use std::{
 
 use crate::{html, Payload};
 
-const STYLE_CSS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/my_config/settings.toml");
+const STYLE_CSS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../static/style.css"));
 
 fn generate_site_in_dir_inner(path: &Path, payload: &Payload) {
     fs::create_dir_all(path).unwrap();
 
-    let index_page = html::index::generate_index_page(payload);
+    let index_page = html::index::generate_index_page(payload, true);
     fs::write(path.join("index.html"), index_page.into_string()).unwrap();
 
     // Copy static files.
@@ -27,7 +27,7 @@ fn generate_site_in_dir_inner(path: &Path, payload: &Payload) {
         fs::create_dir(&layer_path).unwrap();
         for neuron_index in 0..neuron_count {
             let neuron_page =
-                html::neuron::generate_neuron_page(layer_index, neuron_index, payload);
+                html::neuron::generate_neuron_page(layer_index, neuron_index, payload, true);
             let neuron_path = layer_path.join(format!("N{neuron_index}.html"));
             fs::write(neuron_path, neuron_page.into_string()).unwrap();
         }
