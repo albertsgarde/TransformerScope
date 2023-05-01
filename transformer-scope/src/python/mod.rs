@@ -96,6 +96,10 @@ impl PyPayload {
     pub fn to_file(&self, path: &str) {
         self.payload.to_file(path);
     }
+
+    pub fn generate_site_files(&self, dir_path: &str) {
+        crate::html::generate_site_in_dir(dir_path, &self.payload);
+    }
 }
 
 /// A Python module implemented in Rust.

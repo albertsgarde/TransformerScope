@@ -33,6 +33,7 @@ impl NeuronTemplate {
     pub fn generate(
         &self,
         payload: &crate::Payload,
+        file: bool,
         layer_index: usize,
         neuron_index: usize,
     ) -> Markup {
@@ -48,11 +49,11 @@ impl NeuronTemplate {
             head {
                 meta charset="utf-8";
                 title { "Transformer Scope - Layer " (layer_index) " Neuron " (neuron_index)}
-                link rel="stylesheet" href="/static/style.css"{};
+                link rel="stylesheet" href={(if file {".."} else {""})"/static/style.css"}{};
             }
-            a href="/" {"Back to index"}
+            a href={(if file {"../index.html"} else {"/"})} {"Back to index"}
             h1 {"Transformer Scope - Layer " (layer_index) " Neuron " (neuron_index)}
-            (generate_navigation_links(payload.num_layers(), payload.num_neurons(), layer_index, neuron_index))
+            (generate_navigation_links(payload.num_layers(), payload.num_neurons(), layer_index, neuron_index, file))
             (PreEscaped(body))
         )
     }
@@ -63,16 +64,18 @@ fn generate_navigation_links(
     num_neurons: usize,
     layer_index: usize,
     neuron_index: usize,
+    file: bool,
 ) -> Markup {
+    let file_extension = if file { ".html" } else { "" };
     let previous_neuron_link = if neuron_index > 0 {
         html! {
-            a href={"N"({neuron_index-1})} {
+            a href={"N"({neuron_index-1})(file_extension)} {
                 "Previous"
             }
         }
     } else if layer_index > 0 {
         html! {
-            a href={"../L"({layer_index-1})"/N"({num_neurons-1})} {
+            a href={"../L"({layer_index-1})"/N"({num_neurons-1})(file_extension)} {
                 "Previous layer"
             }
         }
@@ -82,13 +85,13 @@ fn generate_navigation_links(
 
     let next_neuron_link = if neuron_index < num_neurons - 1 {
         html! {
-            a href={"N"({neuron_index+1})} {
+            a href={"N"({neuron_index+1})(file_extension)} {
                 "Next"
             }
         }
     } else if layer_index < num_layers - 1 {
         html! {
-            a href={"../L"({layer_index+1})"/N0"} {
+            a href={"../L"({layer_index+1})"/N0"(file_extension)} {
                 "Next layer"
             }
         }
