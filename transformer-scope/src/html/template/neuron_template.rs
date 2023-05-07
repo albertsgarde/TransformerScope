@@ -53,7 +53,7 @@ impl NeuronTemplate {
             }
             a href={(if file {"../index.html"} else {"/"})} {"Back to index"}
             h1 {"Transformer Scope - Layer " (layer_index) " Neuron " (neuron_index)}
-            (generate_navigation_links(payload.num_layers(), payload.num_neurons(), layer_index, neuron_index, file))
+            (generate_navigation_links(payload.num_layers(), payload.num_mlp_neurons(), layer_index, neuron_index, file))
             (PreEscaped(body))
         )
     }

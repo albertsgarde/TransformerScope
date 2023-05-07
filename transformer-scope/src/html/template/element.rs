@@ -1,4 +1,5 @@
 use maud::{html, Markup};
+use ndarray::{s, Ix2};
 use serde::{Deserialize, Serialize};
 
 use crate::{html::heatmap, Payload};
@@ -39,15 +40,49 @@ impl Element {
     pub fn generate(&self, payload: &Payload, layer_index: usize, neuron_index: usize) -> Markup {
         match self {
             Element::Heatmap(heatmap_name) => {
-                let heatmap = payload.get_table(layer_index, neuron_index, heatmap_name);
+                let heatmap = payload.value(heatmap_name).unwrap().as_f32().unwrap();
+                assert_eq!(
+                    &heatmap.shape()[..2],
+                    &[payload.num_layers(), payload.num_mlp_neurons()]
+                );
+                let heatmap = heatmap.slice(s![layer_index, neuron_index, .., ..]);
                 heatmap::heatmap(heatmap)
             }
-            Element::Value(value) => {
-                let value = payload.get_scalar(layer_index, neuron_index, value);
-                html! {
-                    (value)
+            Element::Value(value) => match payload.value(value).unwrap().view() {
+                crate::data::value::ValueView::String(array) => {
+                    let array = array.into_dimensionality::<Ix2>().unwrap();
+                    assert_eq!(
+                        array.dim(),
+                        (payload.num_layers(), payload.num_mlp_neurons())
+                    );
+                    let value = &array[(layer_index, neuron_index)];
+                    html! {
+                        (value)
+                    }
                 }
-            }
+                crate::data::value::ValueView::U32(array) => {
+                    let array = array.into_dimensionality::<Ix2>().unwrap();
+                    assert_eq!(
+                        array.dim(),
+                        (payload.num_layers(), payload.num_mlp_neurons())
+                    );
+                    let value = array[(layer_index, neuron_index)];
+                    html! {
+                        (value)
+                    }
+                }
+                crate::data::value::ValueView::F32(array) => {
+                    let array = array.into_dimensionality::<Ix2>().unwrap();
+                    assert_eq!(
+                        array.dim(),
+                        (payload.num_layers(), payload.num_mlp_neurons())
+                    );
+                    let value = array[(layer_index, neuron_index)];
+                    html! {
+                        (value)
+                    }
+                }
+            },
         }
     }
 }

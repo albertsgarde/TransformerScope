@@ -1,12 +1,12 @@
 use std::{fs::File, path::Path};
 
-use ndarray::ArrayView2;
+use ndarray::{ArrayView2, Ix2};
 
 use serde::{Deserialize, Serialize};
 
 use crate::html::template::NeuronTemplate;
 
-use super::values::Values;
+use super::{values::Values, Value};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Payload {
@@ -45,27 +45,26 @@ impl Payload {
         self.num_layers
     }
 
-    pub fn num_neurons(&self) -> usize {
+    pub fn num_mlp_neurons(&self) -> usize {
         self.num_mlp_neurons
     }
 
-    pub fn ranked_neurons(&self) -> ArrayView2<f32> {
-        self.get_table(0, 0, "ranked_neurons")
+    pub fn ranked_neurons(&self) -> ArrayView2<u32> {
+        self.values
+            .get("ranked_neurons")
+            .expect("Ranked neurons not set.")
+            .as_u32()
+            .unwrap()
+            .view()
+            .into_dimensionality::<Ix2>()
+            .unwrap()
     }
 
     pub fn neuron_template(&self) -> &NeuronTemplate {
         &self.mlp_neuron_template
     }
 
-    pub fn get_table(&self, layer_index: usize, neuron_index: usize, key: &str) -> ArrayView2<f32> {
-        self.values
-            .get_table(layer_index, neuron_index, key)
-            .unwrap_or_else(|| panic!("Table '{key}' not found."))
-    }
-
-    pub fn get_scalar(&self, layer_index: usize, neuron_index: usize, key: &str) -> f32 {
-        self.values
-            .get_scalar(layer_index, neuron_index, key)
-            .unwrap_or_else(|| panic!("Scalar '{key}' not found."))
+    pub fn value(&self, key: impl AsRef<str>) -> Option<&Value> {
+        self.values.get(key.as_ref())
     }
 }
