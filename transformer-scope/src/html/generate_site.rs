@@ -20,7 +20,7 @@ fn generate_site_in_dir_inner(path: &Path, payload: &Payload) {
 
     // Generate site.
     let layer_count = payload.num_layers();
-    let neuron_count = payload.num_neurons();
+    let neuron_count = payload.num_mlp_neurons();
     for layer_index in 0..layer_count {
         println!("Generating pages for neurons in layer {layer_index}...");
         let layer_path = path.join(format!("L{layer_index}"));

@@ -1,169 +1,130 @@
-use ndarray::{s, Array, ArrayView, ArrayView1, ArrayView2, Dimension, RemoveAxis};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::fmt::Debug;
-pub trait ValueLocality: Clone + Copy + Debug + Serialize + DeserializeOwned {
-    type D0: Dimension + Serialize + DeserializeOwned;
-    type D1: Dimension + RemoveAxis + Serialize + DeserializeOwned;
-    type D2: Dimension + RemoveAxis + Serialize + DeserializeOwned;
+use std::fmt::Display;
 
-    fn get_neuron_0d(array: &Array<f32, Self::D0>, layer_index: usize, neuron_index: usize) -> f32;
-    fn get_neuron_1d(
-        array: &Array<f32, Self::D1>,
-        layer_index: usize,
-        neuron_index: usize,
-    ) -> ArrayView1<f32>;
-    fn get_neuron_2d(
-        array: &Array<f32, Self::D2>,
-        layer_index: usize,
-        neuron_index: usize,
-    ) -> ArrayView2<f32>;
+use delegate::delegate;
+use ndarray::{Array, ArrayD, ArrayViewD};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum DataType {
+    String,
+    U32,
+    F32,
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Global;
-impl ValueLocality for Global {
-    type D0 = ndarray::Ix0;
-    type D1 = ndarray::Ix1;
-    type D2 = ndarray::Ix2;
-
-    fn get_neuron_0d(
-        array: &Array<f32, Self::D0>,
-        _layer_index: usize,
-        _neuron_index: usize,
-    ) -> f32 {
-        *array.get(()).unwrap()
-    }
-
-    fn get_neuron_1d(
-        array: &Array<f32, Self::D1>,
-        _layer_index: usize,
-        _neuron_index: usize,
-    ) -> ArrayView1<f32> {
-        array.view()
-    }
-
-    fn get_neuron_2d(
-        array: &Array<f32, Self::D2>,
-        _layer_index: usize,
-        _neuron_index: usize,
-    ) -> ArrayView2<f32> {
-        array.view()
+impl Display for DataType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Layer;
-impl ValueLocality for Layer {
-    type D0 = ndarray::Ix1;
-    type D1 = ndarray::Ix2;
-    type D2 = ndarray::Ix3;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+enum ValueArray {
+    String(ArrayD<String>),
+    U32(ArrayD<u32>),
+    F32(ArrayD<f32>),
+}
 
-    fn get_neuron_0d(
-        array: &Array<f32, Self::D0>,
-        layer_index: usize,
-        _neuron_index: usize,
-    ) -> f32 {
-        *array.get([layer_index]).unwrap()
+pub enum ValueView<'a> {
+    String(ArrayViewD<'a, String>),
+    U32(ArrayViewD<'a, u32>),
+    F32(ArrayViewD<'a, f32>),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Value {
+    array: ValueArray,
+}
+
+impl Value {
+    pub fn from_string<D>(array: Array<String, D>) -> Self
+    where
+        D: ndarray::Dimension,
+    {
+        Self {
+            array: ValueArray::String(array.into_dyn()),
+        }
     }
 
-    fn get_neuron_1d(
-        array: &Array<f32, Self::D1>,
-        layer_index: usize,
-        _neuron_index: usize,
-    ) -> ArrayView1<f32> {
-        array.slice(s![layer_index, ..])
+    pub fn from_u32<D>(array: Array<u32, D>) -> Self
+    where
+        D: ndarray::Dimension,
+    {
+        Self {
+            array: ValueArray::U32(array.into_dyn()),
+        }
     }
 
-    fn get_neuron_2d(
-        array: &Array<f32, Self::D2>,
-        layer_index: usize,
-        _neuron_index: usize,
-    ) -> ArrayView2<f32> {
-        array.slice(s![layer_index, .., ..])
+    pub fn from_f32<D>(array: Array<f32, D>) -> Self
+    where
+        D: ndarray::Dimension,
+    {
+        Self {
+            array: ValueArray::F32(array.into_dyn()),
+        }
+    }
+
+    pub fn data_type(&self) -> DataType {
+        match self.array {
+            ValueArray::String(_) => DataType::String,
+            ValueArray::U32(_) => DataType::U32,
+            ValueArray::F32(_) => DataType::F32,
+        }
+    }
+
+    pub fn view(&self) -> ValueView {
+        match self.array {
+            ValueArray::String(ref array) => ValueView::String(array.view()),
+            ValueArray::U32(ref array) => ValueView::U32(array.view()),
+            ValueArray::F32(ref array) => ValueView::F32(array.view()),
+        }
+    }
+
+    delegate! {
+        to match self.array {
+            ValueArray::String(ref array) => array,
+            ValueArray::U32(ref array) => array,
+            ValueArray::F32(ref array) => array,
+        } {
+            pub fn shape(&self) -> &[usize];
+        }
+    }
+
+    pub fn as_string(&self) -> Option<&ArrayD<String>> {
+        match self.array {
+            ValueArray::String(ref array) => Some(array),
+            _ => None,
+        }
+    }
+
+    pub fn as_u32(&self) -> Option<&ArrayD<u32>> {
+        match self.array {
+            ValueArray::U32(ref array) => Some(array),
+            _ => None,
+        }
+    }
+
+    pub fn as_f32(&self) -> Option<&ArrayD<f32>> {
+        match self.array {
+            ValueArray::F32(ref array) => Some(array),
+            _ => None,
+        }
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
-pub struct Neuron;
-impl ValueLocality for Neuron {
-    type D0 = ndarray::Ix2;
-    type D1 = ndarray::Ix3;
-    type D2 = ndarray::Ix4;
-
-    fn get_neuron_0d(array: &Array<f32, Self::D0>, layer_index: usize, neuron_index: usize) -> f32 {
-        *array.get([layer_index, neuron_index]).unwrap()
-    }
-
-    fn get_neuron_1d(
-        array: &Array<f32, Self::D1>,
-        layer_index: usize,
-        neuron_index: usize,
-    ) -> ArrayView1<f32> {
-        array.slice(s![layer_index, neuron_index, ..])
-    }
-
-    fn get_neuron_2d(
-        array: &Array<f32, Self::D2>,
-        layer_index: usize,
-        neuron_index: usize,
-    ) -> ArrayView2<f32> {
-        array.slice(s![layer_index, neuron_index, .., ..])
+impl From<ArrayD<String>> for Value {
+    fn from(array: ArrayD<String>) -> Self {
+        Self::from_string(array)
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum Value<L: ValueLocality> {
-    Table(Array<f32, L::D2>),
-    Array(Array<f32, L::D1>),
-    Scalar(Array<f32, L::D0>),
+impl From<ArrayD<u32>> for Value {
+    fn from(array: ArrayD<u32>) -> Self {
+        Self::from_u32(array)
+    }
 }
 
-impl<L: ValueLocality> Value<L> {
-    pub fn get_all_tables(&self) -> Option<ArrayView<f32, L::D2>> {
-        match self {
-            Value::Table(array) => Some(array.view()),
-            _ => None,
-        }
-    }
-    pub fn get_all_arrays(&self) -> Option<ArrayView<f32, L::D1>> {
-        match self {
-            Value::Array(array) => Some(array.view()),
-            _ => None,
-        }
-    }
-    pub fn get_all_scalars(&self) -> Option<ArrayView<f32, L::D0>> {
-        match self {
-            Value::Scalar(array) => Some(array.view()),
-            _ => None,
-        }
-    }
-
-    pub fn get_table(&self, layer_index: usize, neuron_index: usize) -> Option<ArrayView2<f32>> {
-        match self {
-            Value::Table(array) => Some(L::get_neuron_2d(array, layer_index, neuron_index)),
-            _ => None,
-        }
-    }
-
-    pub fn get_array(&self, layer_index: usize, neuron_index: usize) -> Option<ArrayView1<f32>> {
-        match self {
-            Value::Array(array) => Some(L::get_neuron_1d(array, layer_index, neuron_index)),
-            _ => None,
-        }
-    }
-
-    pub fn get_scalar(&self, layer_index: usize, neuron_index: usize) -> Option<f32> {
-        match self {
-            Value::Scalar(array) => Some(L::get_neuron_0d(array, layer_index, neuron_index)),
-            _ => None,
-        }
-    }
-
-    pub fn type_string(&self) -> &'static str {
-        match self {
-            Value::Table(_) => "table",
-            Value::Array(_) => "array",
-            Value::Scalar(_) => "scalar",
-        }
+impl From<ArrayD<f32>> for Value {
+    fn from(array: ArrayD<f32>) -> Self {
+        Self::from_f32(array)
     }
 }

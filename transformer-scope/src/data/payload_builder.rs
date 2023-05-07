@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use ndarray::Ix2;
+
 use crate::{html::template::NeuronTemplate, Payload};
 
 use super::{neuron_rankings, value, values::Values, Value};
@@ -9,9 +11,7 @@ pub struct PayloadBuilder {
     num_mlp_neurons: usize,
 
     mlp_neuron_template: Option<NeuronTemplate>,
-    global_values: HashMap<String, Value<value::Global>>,
-    layer_values: HashMap<String, Value<value::Layer>>,
-    neuron_values: HashMap<String, Value<value::Neuron>>,
+    values: HashMap<String, Value>,
 
     rank_values_key: Option<String>,
 }
@@ -22,9 +22,7 @@ impl PayloadBuilder {
             num_layers,
             num_mlp_neurons,
             mlp_neuron_template: None,
-            global_values: HashMap::new(),
-            layer_values: HashMap::new(),
-            neuron_values: HashMap::new(),
+            values: HashMap::new(),
             rank_values_key: None,
         }
     }
@@ -38,54 +36,34 @@ impl PayloadBuilder {
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
-        self.global_values.contains_key(key)
-            || self.layer_values.contains_key(key)
-            || self.neuron_values.contains_key(key)
+        self.values.contains_key(key)
     }
 
-    pub fn add_global_value(&mut self, key: impl Into<String>, value: Value<value::Global>) {
+    pub fn add_value(&mut self, key: impl Into<String>, value: Value) {
         let key: String = key.into();
         if self.contains_key(&key) {
             panic!("Value {key} already set.");
         }
-        self.global_values.insert(key, value);
+        self.values.insert(key, value);
     }
 
-    pub fn add_layer_value(&mut self, key: impl Into<String>, value: Value<value::Layer>) {
-        let key: String = key.into();
-        if self.contains_key(&key) {
-            panic!("Value {key} already set.");
-        }
-        self.layer_values.insert(key, value);
-    }
-
-    pub fn add_neuron_value(&mut self, key: impl Into<String>, value: Value<value::Neuron>) {
-        let key: String = key.into();
-        if self.contains_key(&key) {
-            panic!("Value {key} already set.");
-        }
-        self.neuron_values.insert(key, value);
-    }
-
-    pub fn set_rank_values(&mut self, key: impl Into<String>) {
-        let key: String = key.into();
-        if !self.contains_key(&key) {
-            panic!("No value named {key} found. Please add the value before setting it as the rank value.");
-        }
-        if let Some(rank_values) = self.neuron_values.get(&key) {
-            if rank_values.get_all_scalars().is_none() {
-                panic!(
-                    "Rank values must be a scalar value. '{key}' is a {} value.",
-                    rank_values.type_string()
-                );
-            }
+    pub fn set_rank_values(&mut self, rank_values_key: impl Into<String>) {
+        let key: String = rank_values_key.into();
+        if let Some(rank_values) = self.values.get(&key) {
+            assert_eq!(
+                rank_values.shape(),
+                &[self.num_layers, self.num_mlp_neurons],
+                "Rank values must have shape [{}, {}], i.e. one element for every neuron.",
+                self.num_layers,
+                self.num_mlp_neurons,
+            );
+            assert_eq!(
+                rank_values.data_type(),
+                value::DataType::F32,
+                "Rank values must have data type F32.",
+            )
         } else {
-            let locality_string = if self.global_values.contains_key(&key) {
-                "global"
-            } else {
-                "layer"
-            };
-            panic!("Rank values must be a neuron value. '{key}' is a {locality_string} value.");
+            panic!("No value named {key} found. Please add the value before setting it as the rank value.");
         }
         self.rank_values_key = Some(key);
     }
@@ -101,30 +79,31 @@ impl PayloadBuilder {
             num_layers,
             num_mlp_neurons,
             mlp_neuron_template,
-            mut global_values,
-            layer_values,
-            mut neuron_values,
+            mut values,
             rank_values_key,
         } = self;
 
         if let Some(rank_values_key) = rank_values_key {
-            let rank_values = neuron_values
-                .get(&rank_values_key)
-                .unwrap_or_else(|| panic!("Rank values key '{rank_values_key}' not found in `neuron_values`. This should be guaranteed by the `set_rank_values` method."))
-                .get_all_scalars()
-                .unwrap_or_else(|| panic!("Rank values '{rank_values_key}' not a scalar value. This should be guaranteed by the `set_rank_values` method."));
+            let rank_values = values
+                .get(&rank_values_key).unwrap_or_else(|| panic!("No value found with key '{rank_values_key}'. This should be guaranteed by the `set_rank_values` method."));
+            let rank_values_type = rank_values.data_type();
+            let rank_values = rank_values.as_f32().unwrap_or_else(|| panic!("Value with key '{rank_values_key}' has the data type '{rank_values_type}', but only F32 is supported. This should be guaranteed by teh `set_rank_values` method."));
+            let rank_values = rank_values.view().into_dimensionality::<Ix2>().unwrap();
+            assert_eq!(rank_values.shape(), &[num_layers, num_mlp_neurons]);
+
             let (neuron_ranks, ranked_neurons) =
                 neuron_rankings::calculate_neuron_rankings(rank_values);
-            let float_neuron_ranks = neuron_ranks.map(|&rank| rank as f32);
-            let float_ranked_neurons = ranked_neurons.map(|&rank| rank as f32);
-            neuron_values.insert("rank".to_string(), Value::Scalar(float_neuron_ranks));
-            global_values.insert(
+            values.insert(
+                "rank".to_string(),
+                Value::from_u32(neuron_ranks.map(|&x| x.try_into().unwrap())),
+            );
+            values.insert(
                 "ranked_neurons".to_string(),
-                Value::Table(float_ranked_neurons),
+                Value::from_u32(ranked_neurons.map(|&x| x.try_into().unwrap())),
             );
         }
 
-        let values = Values::new(global_values, layer_values, neuron_values);
+        let values = Values::new(values);
 
         Payload::new(
             num_layers,

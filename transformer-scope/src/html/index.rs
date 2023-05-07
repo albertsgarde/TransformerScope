@@ -1,5 +1,5 @@
 use maud::{html, Markup};
-use ndarray::{s, ArrayView2, Axis};
+use ndarray::{ArrayView2, Axis};
 
 use crate::Payload;
 
@@ -19,11 +19,11 @@ pub fn generate_index_page(payload: &Payload, site: bool) -> Markup {
             a href="https://neuroscope.io/gelu-3l/0/314.html"{"Neuroscope"} " by Neel
             Nanda."}
         }
-        (generate_ranked_neurons_table(ranked_neurons.slice(s![.., ..]), site))
+        (generate_ranked_neurons_table(ranked_neurons.view(), site))
     )
 }
 
-pub fn generate_ranked_neurons_table(ranked_neurons: ArrayView2<f32>, site: bool) -> Markup {
+pub fn generate_ranked_neurons_table(ranked_neurons: ArrayView2<u32>, site: bool) -> Markup {
     let (num_layers, _num_neurons) = ranked_neurons.dim();
     html!(
         table {

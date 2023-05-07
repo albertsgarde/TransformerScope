@@ -13,4 +13,5 @@ classifiers = [
 dependencies = ["cffi"]
 
 [tool.maturin]
+features = ["python"]
 cargo-extra-args = "--features extension-module"

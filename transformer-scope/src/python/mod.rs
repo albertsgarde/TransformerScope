@@ -1,35 +1,11 @@
-use numpy::borrow::{PyReadonlyArray2, PyReadonlyArray4};
+use ndarray::ArrayD;
+use numpy::borrow::PyReadonlyArrayDyn;
 use pyo3::prelude::*;
 
 use crate::{
-    data::{Payload, PayloadBuilder, Value},
+    data::{Payload, PayloadBuilder},
     html::template::NeuronTemplate,
 };
-
-#[pyclass(name = "ValueType", frozen)]
-enum ValueType {
-    Table,
-    Array,
-    Scalar,
-}
-
-#[pymethods]
-impl ValueType {
-    #[classattr]
-    fn table() -> Self {
-        ValueType::Table
-    }
-
-    #[classattr]
-    fn array() -> Self {
-        ValueType::Array
-    }
-
-    #[classattr]
-    fn scalar() -> Self {
-        ValueType::Scalar
-    }
-}
 
 #[pyclass(name = "PayloadBuilder")]
 struct PyPayloadBuilder {
@@ -57,19 +33,25 @@ impl PyPayloadBuilder {
         self.get().mlp_neuron_template(neuron_template);
     }
 
-    pub fn add_global_table(&mut self, key: &str, value: PyReadonlyArray2<f32>) {
-        self.get()
-            .add_global_value(key, Value::Table(value.as_array().to_owned()));
+    pub fn add_string_value(
+        &mut self,
+        key: &str,
+        value: PyReadonlyArrayDyn<PyObject>,
+        py: Python<'_>,
+    ) {
+        assert_eq!(value.dtype().kind(), b'U', "Value must be a string.");
+        let value: ArrayD<String> = value.as_array().map(|obj| obj.extract(py).unwrap());
+        self.get().add_value(key, value.to_owned().into());
     }
 
-    pub fn add_neuron_table(&mut self, key: &str, value: PyReadonlyArray4<f32>) {
+    pub fn add_u32_value(&mut self, key: &str, value: PyReadonlyArrayDyn<u32>) {
         self.get()
-            .add_neuron_value(key, Value::Table(value.as_array().to_owned()));
+            .add_value(key, value.as_array().to_owned().into());
     }
 
-    pub fn add_neuron_scalar(&mut self, key: &str, value: PyReadonlyArray2<f32>) {
+    pub fn add_f32_value(&mut self, key: &str, value: PyReadonlyArrayDyn<f32>) {
         self.get()
-            .add_neuron_value(key, Value::Scalar(value.as_array().to_owned()));
+            .add_value(key, value.as_array().to_owned().into());
     }
 
     pub fn set_rank_values(&mut self, key: &str) {
