@@ -5,7 +5,7 @@ const COLOR_POSITIVE: [f32; 3] = [69., 254., 152.];
 const COLOR_ZERO: [f32; 3] = [0., 0., 0.];
 const COLOR_NEGATIVE: [f32; 3] = [255., 0., 0.];
 
-fn interpolate_color(value: f32) -> [u8; 3] {
+pub fn interpolate_color(value: f32) -> [u8; 3] {
     let interpolation_color = if value > 0. {
         COLOR_POSITIVE
     } else {

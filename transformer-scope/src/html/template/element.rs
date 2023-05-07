@@ -2,12 +2,19 @@ use maud::{html, Markup};
 use ndarray::{s, Ix2};
 use serde::{Deserialize, Serialize};
 
-use crate::{html::heatmap, Payload};
+use crate::{
+    html::{focus_sequences, heatmap},
+    Payload,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Element {
     Heatmap(String),
     Value(String),
+    FocusSequences {
+        activations: String,
+        step_names: String,
+    },
 }
 
 impl Element {
@@ -28,6 +35,15 @@ impl Element {
                 let value_name = arg_strings.next().unwrap();
                 assert_eq!(arg_strings.next(), None);
                 Element::Value(value_name.to_string())
+            }
+            "focus_sequences" => {
+                let activations_value_name = arg_strings.next().unwrap();
+                let step_names_value_name = arg_strings.next().unwrap();
+                assert_eq!(arg_strings.next(), None);
+                Element::FocusSequences {
+                    activations: activations_value_name.to_string(),
+                    step_names: step_names_value_name.to_string(),
+                }
             }
             _ => panic!("Invalid element name: {element_name}"),
         }
@@ -83,6 +99,22 @@ impl Element {
                     }
                 }
             },
+            Element::FocusSequences {
+                activations,
+                step_names,
+            } => {
+                let activations = payload.value(activations).unwrap().as_f32().unwrap();
+                let step_names = payload.value(step_names).unwrap().as_string().unwrap();
+                assert_eq!(
+                    &activations.shape()[..2],
+                    &[payload.num_layers(), payload.num_mlp_neurons()]
+                );
+                assert_eq!(step_names.shape(), activations.shape());
+
+                let activations = activations.slice(s![layer_index, neuron_index, .., ..]);
+                let step_names = step_names.slice(s![layer_index, neuron_index, .., ..]);
+                focus_sequences::focus_sequences(activations, step_names)
+            }
         }
     }
 }

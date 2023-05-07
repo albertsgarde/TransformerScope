@@ -33,13 +33,12 @@ impl PyPayloadBuilder {
         self.get().mlp_neuron_template(neuron_template);
     }
 
-    pub fn add_string_value(
+    pub fn add_str_value(
         &mut self,
         key: &str,
         value: PyReadonlyArrayDyn<PyObject>,
         py: Python<'_>,
     ) {
-        assert_eq!(value.dtype().kind(), b'U', "Value must be a string.");
         let value: ArrayD<String> = value.as_array().map(|obj| obj.extract(py).unwrap());
         self.get().add_value(key, value.to_owned().into());
     }
