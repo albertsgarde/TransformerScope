@@ -2,9 +2,17 @@ use std::collections::HashMap;
 
 use ndarray::Ix2;
 
-use crate::{html::template::{NeuronTemplate, ArgumentError}, Payload};
+use crate::{
+    html::template::{ArgumentError, NeuronTemplate},
+    Payload,
+};
 
-use super::{neuron_rankings, value::{self, Scope}, values::Values, Value};
+use super::{
+    neuron_rankings,
+    value::{self, Scope},
+    values::Values,
+    Value,
+};
 
 pub struct PayloadBuilder {
     num_layers: usize,
@@ -42,9 +50,9 @@ impl PayloadBuilder {
     pub fn add_value(&mut self, key: impl Into<String>, value: Value) {
         match value.scope() {
             Scope::Global => {}
-            Scope::Layer => assert_eq!(value.shape()[0], self.num_layers, 
+            Scope::Layer => assert_eq!(value.shape()[0], self.num_layers,
                     "The first dimension of a value with scope `Layer` must have size equal to the number of layers."),
-            Scope::Neuron => assert_eq!(value.shape()[..2], [self.num_layers, self.num_mlp_neurons], 
+            Scope::Neuron => assert_eq!(value.shape()[..2], [self.num_layers, self.num_mlp_neurons],
                     "The first and second dimensions of a value with scope `Neuron` must match the number of layers and the number of MLP neurons per layer."),
         }
 

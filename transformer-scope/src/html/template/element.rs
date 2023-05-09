@@ -130,59 +130,55 @@ impl Element {
 
     pub fn validate_arguments(&self, payload: &Payload) -> Result<(), ArgumentError> {
         match self {
-            Element::Heatmap(heatmap_key) => {
-                payload
-                    .value(heatmap_key)
-                    .ok_or_else(|| ArgumentErrorType::MissingValue(heatmap_key.clone())).and_then(|heatmap| {
-                        let heatmap_axis_num = match heatmap.scope() {
-                            Scope::Global => heatmap.shape().len(),
-                            Scope::Layer => heatmap.shape().len() - 1,
-                            Scope::Neuron => heatmap.shape().len() - 2,
-                        };
-                        if heatmap_axis_num != 2 {
-                            Err(ArgumentErrorType::AxisNum {
-                                required_axis_num: 2,
-                                found_axis_num: heatmap_axis_num,
-                            })
-                        } else if heatmap.data_type() != DataType::F32 {
-                            Err(ArgumentErrorType::DataType {
-                                required_data_type: DataType::F32,
-                                found_data_type: heatmap.data_type(),
-                            })
-                        } else {
-                            Ok(())
-                        }
-                    })
-                    .map_err(|error_type| ArgumentError {
-                        error_type,
-                        value_name: heatmap_key.to_owned(),
-                    })
-                
-            }
-            Element::Value(value_key) => {
-                payload
-                    .value(value_key)
-                    .ok_or_else(|| ArgumentErrorType::MissingValue(value_key.clone())).and_then(|value| {
-                        let value_axis_num = match value.scope() {
-                            Scope::Global => value.shape().len(),
-                            Scope::Layer => value.shape().len() - 1,
-                            Scope::Neuron => value.shape().len() - 2,
-                        };
-                        if value_axis_num != 0 {
-                            Err(ArgumentErrorType::AxisNum {
-                                required_axis_num: 0,
-                                found_axis_num: value_axis_num,
-                            })
-                        } else {
-                            Ok(())
-                        }
-                        
-                    }).map_err(|error_type| ArgumentError {
-                        error_type,
-                        value_name: value_key.to_owned(),
-                    })
-                
-            }
+            Element::Heatmap(heatmap_key) => payload
+                .value(heatmap_key)
+                .ok_or_else(|| ArgumentErrorType::MissingValue(heatmap_key.clone()))
+                .and_then(|heatmap| {
+                    let heatmap_axis_num = match heatmap.scope() {
+                        Scope::Global => heatmap.shape().len(),
+                        Scope::Layer => heatmap.shape().len() - 1,
+                        Scope::Neuron => heatmap.shape().len() - 2,
+                    };
+                    if heatmap_axis_num != 2 {
+                        Err(ArgumentErrorType::AxisNum {
+                            required_axis_num: 2,
+                            found_axis_num: heatmap_axis_num,
+                        })
+                    } else if heatmap.data_type() != DataType::F32 {
+                        Err(ArgumentErrorType::DataType {
+                            required_data_type: DataType::F32,
+                            found_data_type: heatmap.data_type(),
+                        })
+                    } else {
+                        Ok(())
+                    }
+                })
+                .map_err(|error_type| ArgumentError {
+                    error_type,
+                    value_name: heatmap_key.to_owned(),
+                }),
+            Element::Value(value_key) => payload
+                .value(value_key)
+                .ok_or_else(|| ArgumentErrorType::MissingValue(value_key.clone()))
+                .and_then(|value| {
+                    let value_axis_num = match value.scope() {
+                        Scope::Global => value.shape().len(),
+                        Scope::Layer => value.shape().len() - 1,
+                        Scope::Neuron => value.shape().len() - 2,
+                    };
+                    if value_axis_num != 0 {
+                        Err(ArgumentErrorType::AxisNum {
+                            required_axis_num: 0,
+                            found_axis_num: value_axis_num,
+                        })
+                    } else {
+                        Ok(())
+                    }
+                })
+                .map_err(|error_type| ArgumentError {
+                    error_type,
+                    value_name: value_key.to_owned(),
+                }),
             Element::FocusSequences {
                 activations: activations_key,
                 step_names: step_names_key,
@@ -223,14 +219,15 @@ impl Element {
                             Scope::Layer => step_names.shape().len() - 1,
                             Scope::Neuron => step_names.shape().len() - 2,
                         };
-        
+
                         if step_names_axis_num != 2 {
                             Err(ArgumentErrorType::AxisNum {
                                 required_axis_num: 2,
                                 found_axis_num: step_names_axis_num,
                             })
                         } else if step_names.shape() != activations.shape() {
-                            Err(ArgumentErrorType::Other(format!("The two arguments to the element 'focus_sequences' must have equal shape (after scope). First argument has shape {:?} while second argument has shape {:?}.", 
+                            Err(ArgumentErrorType::Other(format!("The two arguments to the element 'focus_sequences' must have equal shape (after scope). \
+                                    First argument has shape {:?} while second argument has shape {:?}.",
                                     activations.shape(), step_names.shape())))
                         } else if step_names.data_type() != DataType::String {
                             Err(ArgumentErrorType::DataType {
