@@ -4,7 +4,7 @@ use ndarray::Ix2;
 
 use crate::{html::template::NeuronTemplate, Payload};
 
-use super::{neuron_rankings, value, values::Values, Value};
+use super::{neuron_rankings, value::{self, Scope}, values::Values, Value};
 
 pub struct PayloadBuilder {
     num_layers: usize,
@@ -40,6 +40,14 @@ impl PayloadBuilder {
     }
 
     pub fn add_value(&mut self, key: impl Into<String>, value: Value) {
+        match value.scope() {
+            Scope::Global => {}
+            Scope::Layer => assert_eq!(value.shape()[0], self.num_layers, 
+                    "The first dimension of a value with scope `Layer` must have size equal to the number of layers."),
+            Scope::Neuron => assert_eq!(value.shape()[..2], [self.num_layers, self.num_mlp_neurons], 
+                    "The first and second dimensions of a value with scope `Neuron` must match the number of layers and the number of MLP neurons per layer."),
+        }
+
         let key: String = key.into();
         if self.contains_key(&key) {
             panic!("Value {key} already set.");
@@ -95,11 +103,17 @@ impl PayloadBuilder {
                 neuron_rankings::calculate_neuron_rankings(rank_values);
             values.insert(
                 "rank".to_string(),
-                Value::from_u32(neuron_ranks.map(|&x| x.try_into().unwrap())),
+                Value::new(
+                    neuron_ranks.map(|&x| u32::try_from(x).unwrap()),
+                    Scope::Neuron,
+                ),
             );
             values.insert(
                 "ranked_neurons".to_string(),
-                Value::from_u32(ranked_neurons.map(|&x| x.try_into().unwrap())),
+                Value::new(
+                    ranked_neurons.map(|&x| u32::try_from(x).unwrap()),
+                    Scope::Global,
+                ),
             );
         }
 

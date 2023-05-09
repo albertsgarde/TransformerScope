@@ -3,9 +3,27 @@ use numpy::borrow::PyReadonlyArrayDyn;
 use pyo3::prelude::*;
 
 use crate::{
-    data::{Payload, PayloadBuilder},
+    data::{value::Scope, Payload, PayloadBuilder, Value},
     html::template::NeuronTemplate,
 };
+
+#[pyclass(name = "Scope")]
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PyScope {
+    Global,
+    Layer,
+    Neuron,
+}
+
+impl From<PyScope> for Scope {
+    fn from(value: PyScope) -> Self {
+        match value {
+            PyScope::Global => Scope::Global,
+            PyScope::Layer => Scope::Layer,
+            PyScope::Neuron => Scope::Neuron,
+        }
+    }
+}
 
 #[pyclass(name = "PayloadBuilder")]
 struct PyPayloadBuilder {
@@ -37,20 +55,24 @@ impl PyPayloadBuilder {
         &mut self,
         key: &str,
         value: PyReadonlyArrayDyn<PyObject>,
+        scope: PyScope,
         py: Python<'_>,
     ) {
-        let value: ArrayD<String> = value.as_array().map(|obj| obj.extract(py).unwrap());
-        self.get().add_value(key, value.to_owned().into());
+        let value_array: ArrayD<String> = value.as_array().map(|obj| obj.extract(py).unwrap());
+        let value = Value::new(value_array, scope.into());
+        self.get().add_value(key, value);
     }
 
-    pub fn add_u32_value(&mut self, key: &str, value: PyReadonlyArrayDyn<u32>) {
-        self.get()
-            .add_value(key, value.as_array().to_owned().into());
+    pub fn add_u32_value(&mut self, key: &str, value: PyReadonlyArrayDyn<u32>, scope: PyScope) {
+        let value_array = value.as_array().to_owned();
+        let value = Value::new(value_array, scope.into());
+        self.get().add_value(key, value);
     }
 
-    pub fn add_f32_value(&mut self, key: &str, value: PyReadonlyArrayDyn<f32>) {
-        self.get()
-            .add_value(key, value.as_array().to_owned().into());
+    pub fn add_f32_value(&mut self, key: &str, value: PyReadonlyArrayDyn<f32>, scope: PyScope) {
+        let value_array = value.as_array().to_owned();
+        let value = Value::new(value_array, scope.into());
+        self.get().add_value(key, value);
     }
 
     pub fn set_rank_values(&mut self, key: &str) {
@@ -88,5 +110,6 @@ impl PyPayload {
 fn transformer_scope(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyPayloadBuilder>()?;
     m.add_class::<PyPayload>()?;
+    m.add_class::<PyScope>()?;
     Ok(())
 }

@@ -3,6 +3,7 @@ use ndarray::{s, Ix2};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    data::value::Scope,
     html::{focus_sequences, heatmap},
     Payload,
 };
@@ -103,16 +104,23 @@ impl Element {
                 activations,
                 step_names,
             } => {
-                let activations = payload.value(activations).unwrap().as_f32().unwrap();
-                let step_names = payload.value(step_names).unwrap().as_string().unwrap();
+                let activations_value = payload.value(activations).unwrap();
+                let step_names_value = payload.value(step_names).unwrap();
+
+                let activations = activations_value.as_f32().unwrap();
+                let step_names = step_names_value.as_string().unwrap();
                 assert_eq!(
                     &activations.shape()[..2],
                     &[payload.num_layers(), payload.num_mlp_neurons()]
                 );
-                assert_eq!(step_names.shape(), activations.shape());
 
                 let activations = activations.slice(s![layer_index, neuron_index, .., ..]);
-                let step_names = step_names.slice(s![layer_index, neuron_index, .., ..]);
+                let step_names = match step_names_value.scope() {
+                    Scope::Global => step_names.view().into_dimensionality().unwrap(),
+                    Scope::Layer => step_names.slice(s![layer_index, .., ..]),
+                    Scope::Neuron => step_names.slice(s![layer_index, neuron_index, .., ..]),
+                };
+                assert_eq!(activations.shape(), step_names.shape());
                 focus_sequences::focus_sequences(activations, step_names)
             }
         }
