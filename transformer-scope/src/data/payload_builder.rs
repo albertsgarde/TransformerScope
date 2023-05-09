@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use ndarray::Ix2;
 
-use crate::{html::template::NeuronTemplate, Payload};
+use crate::{html::template::{NeuronTemplate, ArgumentError}, Payload};
 
 use super::{neuron_rankings, value::{self, Scope}, values::Values, Value};
 
@@ -76,7 +76,7 @@ impl PayloadBuilder {
         self.rank_values_key = Some(key);
     }
 
-    pub fn build(self) -> Payload {
+    pub fn build(self) -> Result<Payload, ArgumentError> {
         if self.contains_key("rank") {
             panic!("Value name 'neuron_ranks' is reserved.")
         }

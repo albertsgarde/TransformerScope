@@ -64,6 +64,12 @@ pub enum Scope {
     Neuron,
 }
 
+impl Display for Scope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 pub enum ValueView<'a> {
     String(ArrayViewD<'a, String>),
     U32(ArrayViewD<'a, u32>),
