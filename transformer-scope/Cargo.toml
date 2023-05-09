@@ -28,4 +28,3 @@ postcard = { version = "1.0.4", features = ["alloc"] }
 
 [features]
 python = ["dep:pyo3", "dep:numpy"]
-
