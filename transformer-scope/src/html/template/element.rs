@@ -214,21 +214,27 @@ impl Element {
                 payload
                     .value(step_names_key)
                     .ok_or_else(|| ArgumentErrorType::MissingValue(step_names_key.clone())).and_then(|step_names| {
-                        let step_names_axis_num = match step_names.scope() {
-                            Scope::Global => step_names.shape().len(),
-                            Scope::Layer => step_names.shape().len() - 1,
-                            Scope::Neuron => step_names.shape().len() - 2,
+                        let step_names_shape = match step_names.scope() {
+                            Scope::Global => step_names.shape(),
+                            Scope::Layer => &step_names.shape()[1..],
+                            Scope::Neuron => &step_names.shape()[2..],
                         };
 
-                        if step_names_axis_num != 2 {
+                        let activations_shape = match activations.scope() {
+                            Scope::Global => activations.shape(),
+                            Scope::Layer => &activations.shape()[1..],
+                            Scope::Neuron => &activations.shape()[2..],
+                        };
+
+                        if step_names_shape.len() != 2 {
                             Err(ArgumentErrorType::AxisNum {
                                 required_axis_num: 2,
-                                found_axis_num: step_names_axis_num,
+                                found_axis_num: step_names_shape.len(),
                             })
-                        } else if step_names.shape() != activations.shape() {
+                        } else if step_names_shape != activations_shape {
                             Err(ArgumentErrorType::Other(format!("The two arguments to the element 'focus_sequences' must have equal shape (after scope). \
                                     First argument has shape {:?} while second argument has shape {:?}.",
-                                    activations.shape(), step_names.shape())))
+                                    activations_shape, step_names_shape)))
                         } else if step_names.data_type() != DataType::String {
                             Err(ArgumentErrorType::DataType {
                                 required_data_type: DataType::String,

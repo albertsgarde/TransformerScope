@@ -31,7 +31,7 @@ pub enum ArgumentErrorType {
 }
 
 #[derive(Clone, Debug, Error)]
-#[error("{error_type}")]
+#[error("{error_type} Value name: {value_name}")]
 pub struct ArgumentError {
     error_type: ArgumentErrorType,
     value_name: String,
