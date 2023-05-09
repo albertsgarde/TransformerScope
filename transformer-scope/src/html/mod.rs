@@ -5,5 +5,7 @@ mod neuron;
 pub use neuron::generate_neuron_page;
 mod heatmap;
 pub use heatmap::heatmap;
+mod focus_sequences;
+pub use focus_sequences::focus_sequences;
 mod generate_site;
 pub use generate_site::generate_site_in_dir;

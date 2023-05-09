@@ -2,7 +2,9 @@ use itertools::Itertools;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::{Deserialize, Serialize};
 
-use super::Element;
+use crate::Payload;
+
+use super::{ArgumentError, Element};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NeuronTemplate {
@@ -56,6 +58,13 @@ impl NeuronTemplate {
             (generate_navigation_links(payload.num_layers(), payload.num_mlp_neurons(), layer_index, neuron_index, file))
             (PreEscaped(body))
         )
+    }
+
+    pub fn validate_arguments(&self, payload: &Payload) -> Result<(), ArgumentError> {
+        for element in self.template.iter().map(|(element, _)| element) {
+            element.validate_arguments(payload)?;
+        }
+        Ok(())
     }
 }
 

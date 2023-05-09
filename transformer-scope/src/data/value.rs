@@ -1,8 +1,48 @@
 use std::fmt::Display;
 
 use delegate::delegate;
-use ndarray::{Array, ArrayD, ArrayViewD};
+use ndarray::{Array, ArrayD, ArrayViewD, Dimension};
 use serde::{Deserialize, Serialize};
+
+use private::ValueArray;
+
+mod private {
+    use ndarray::ArrayD;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub enum ValueArray {
+        String(ArrayD<String>),
+        U32(ArrayD<u32>),
+        F32(ArrayD<f32>),
+    }
+
+    pub trait Data: Sized {
+        fn to_value_array(array: ArrayD<Self>) -> ValueArray;
+    }
+
+    impl Data for String {
+        fn to_value_array(array: ArrayD<Self>) -> ValueArray {
+            ValueArray::String(array)
+        }
+    }
+
+    impl Data for u32 {
+        fn to_value_array(array: ArrayD<Self>) -> ValueArray {
+            ValueArray::U32(array)
+        }
+    }
+
+    impl Data for f32 {
+        fn to_value_array(array: ArrayD<Self>) -> ValueArray {
+            ValueArray::F32(array)
+        }
+    }
+}
+
+pub trait Data: private::Data {}
+
+impl<T> Data for T where T: private::Data {}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum DataType {
@@ -17,11 +57,17 @@ impl Display for DataType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-enum ValueArray {
-    String(ArrayD<String>),
-    U32(ArrayD<u32>),
-    F32(ArrayD<f32>),
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Scope {
+    Global,
+    Layer,
+    Neuron,
+}
+
+impl Display for Scope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 pub enum ValueView<'a> {
@@ -33,34 +79,17 @@ pub enum ValueView<'a> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Value {
     array: ValueArray,
+    scope: Scope,
 }
 
 impl Value {
-    pub fn from_string<D>(array: Array<String, D>) -> Self
+    pub fn new<A, D>(array: Array<A, D>, scope: Scope) -> Self
     where
-        D: ndarray::Dimension,
+        A: Data,
+        D: Dimension,
     {
-        Self {
-            array: ValueArray::String(array.into_dyn()),
-        }
-    }
-
-    pub fn from_u32<D>(array: Array<u32, D>) -> Self
-    where
-        D: ndarray::Dimension,
-    {
-        Self {
-            array: ValueArray::U32(array.into_dyn()),
-        }
-    }
-
-    pub fn from_f32<D>(array: Array<f32, D>) -> Self
-    where
-        D: ndarray::Dimension,
-    {
-        Self {
-            array: ValueArray::F32(array.into_dyn()),
-        }
+        let array = A::to_value_array(array.into_dyn());
+        Self { array, scope }
     }
 
     pub fn data_type(&self) -> DataType {
@@ -69,6 +98,10 @@ impl Value {
             ValueArray::U32(_) => DataType::U32,
             ValueArray::F32(_) => DataType::F32,
         }
+    }
+
+    pub fn scope(&self) -> Scope {
+        self.scope
     }
 
     pub fn view(&self) -> ValueView {
@@ -108,23 +141,5 @@ impl Value {
             ValueArray::F32(ref array) => Some(array),
             _ => None,
         }
-    }
-}
-
-impl From<ArrayD<String>> for Value {
-    fn from(array: ArrayD<String>) -> Self {
-        Self::from_string(array)
-    }
-}
-
-impl From<ArrayD<u32>> for Value {
-    fn from(array: ArrayD<u32>) -> Self {
-        Self::from_u32(array)
-    }
-}
-
-impl From<ArrayD<f32>> for Value {
-    fn from(array: ArrayD<f32>) -> Self {
-        Self::from_f32(array)
     }
 }

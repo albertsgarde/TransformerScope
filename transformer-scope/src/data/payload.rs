@@ -1,10 +1,10 @@
-use std::{fs::File, path::Path};
+use std::path::Path;
 
 use ndarray::{ArrayView2, Ix2};
 
 use serde::{Deserialize, Serialize};
 
-use crate::html::template::NeuronTemplate;
+use crate::html::template::{ArgumentError, NeuronTemplate};
 
 use super::{values::Values, Value};
 
@@ -24,21 +24,27 @@ impl Payload {
         num_mlp_neurons: usize,
         mlp_neuron_template: NeuronTemplate,
         values: Values,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, ArgumentError> {
+        let result = Self {
             num_layers,
             num_mlp_neurons,
             mlp_neuron_template,
             values,
-        }
+        };
+        result
+            .mlp_neuron_template
+            .validate_arguments(&result)
+            .map(|_| result)
     }
 
     pub fn from_file<P: AsRef<Path>>(path: P) -> Self {
-        bincode::deserialize_from(File::open(path.as_ref()).unwrap()).unwrap()
+        let data = std::fs::read(path.as_ref()).unwrap();
+        postcard::from_bytes(data.as_slice()).unwrap()
     }
 
     pub fn to_file<P: AsRef<Path>>(&self, path: P) {
-        bincode::serialize_into(File::create(path.as_ref()).unwrap(), self).unwrap();
+        let data = postcard::to_allocvec(&self).unwrap();
+        std::fs::write(path.as_ref(), data).unwrap();
     }
 
     pub fn num_layers(&self) -> usize {
