@@ -68,7 +68,6 @@ tomli==2.0.1
 torch==2.0.1
 tqdm==4.65.0
 transformer-lens==1.2.2
-transformer_scope @ file:///tmp/.tmpB34Ouw/transformer_scope-0.1.0-cp39-cp39-linux_x86_64.whl
 transformers==4.29.2
 triton==2.0.0
 typeguard==4.0.0
