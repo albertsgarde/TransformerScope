@@ -110,39 +110,50 @@ shutil.rmtree(output_path, ignore_errors=True)
 os.makedirs(output_path, exist_ok=True)
 
 print("Creating payload...")
+# Load html template for neuron sites.
 neuron_template = open(os.path.join(path, "mlp_neuron.html"), "r").read()
 
+# Convert the focus game moves to string labels.
 focus_game_moves_str = np.vectorize(calculations.int_to_label)(
     focus_game_moves.detach().cpu().numpy()
 ).astype("object")
-print(focus_game_moves_str.dtype)
 
+# Create a payload builder with 8 layers and 2048 neurons per layer.
 payload_builder = PayloadBuilder(8, 2048)
+# Add the template for the neuron sites to the payload builder.
 payload_builder.mlp_neuron_template(neuron_template)
+# Add values for the ownership heatmap.
 payload_builder.add_f32_value(
     "ownership_heatmap", ownership_heatmap.detach().cpu().numpy(), Scope.Neuron
 )
+# Add values for the blank heatmap.
 payload_builder.add_f32_value(
     "blank_heatmap", blank_heatmap.detach().cpu().numpy(), Scope.Neuron
 )
+# Add values for the attributions.
 payload_builder.add_f32_value(
     "logit_attribution_heatmap", attributions.detach().cpu().numpy(), Scope.Neuron
 )
 
+# Add the standard deviations of the ownership heatmaps.
 payload_builder.add_f32_value(
     "ownership_heatmap_stds",
     ownership_heatmap_stds.detach().cpu().numpy(),
     Scope.Neuron,
 )
+# Set the standard deviations of the ownership heatmaps as the rank values.
 payload_builder.set_rank_values("ownership_heatmap_stds")
 
+# Add activation values in focus games for each neuron.
 payload_builder.add_f32_value(
     "focus_game_neuron_activations",
     focus_game_neuron_activations.detach().cpu().numpy(),
     Scope.Neuron,
 )
+# Add the focus game moves as string values.
 payload_builder.add_str_value("focus_game_moves", focus_game_moves_str, Scope.Global)
 
+# Build the payload.
 payload = payload_builder.build()
 
 print("Writing payload to file...")
