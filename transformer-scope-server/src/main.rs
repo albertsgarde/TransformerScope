@@ -32,13 +32,14 @@ async fn main() -> std::io::Result<()> {
     print!("Loading payload...");
     io::stdout().flush().unwrap();
     let state = ApplicationState::new(path);
+    let data = web::Data::new(state.clone());
     println!("\rPayload loaded.                  ");
     println!("Serving site...");
 
     HttpServer::new(move || {
         App::new()
             .service(actix_files::Files::new("/static", "./static"))
-            .app_data(web::Data::new(state.clone()))
+            .app_data(data.clone())
             .service(index)
             .service(neuron)
     })
