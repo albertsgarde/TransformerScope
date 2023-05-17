@@ -1,7 +1,7 @@
 # TransformerScope
 An interpretability tool for transformer models built on TransformerLens
 
-# Contributor setup
+## Contributor setup
 This guide will ensure you have the right environment and run the [othelloscope example](examples/othelloscope).
 Tested in Windows Subsystem for Linux with Ubuntu 22.04.2 LTS.
 1. Ensure you have a working Python installation
@@ -15,7 +15,7 @@ Tested in Windows Subsystem for Linux with Ubuntu 22.04.2 LTS.
 9. Run `cargo run --release -- examples/othelloscope/output/payload` to start the server.
 10. Visit [localhost:8080](localhost:8080) in a browser to view the website.
 
-## Windows notes
+### Windows notes
 On Windows, Maturin works less well, but there are work arounds.
 1. Make sure you clone the project into a path with no spaces.
 2. When building with Maturin, if you get the error `Invalid python interpreter version` or `Unsupported Python interpreter`, this is likely because Maturin fails to find your environment's interpreter.
