@@ -58,26 +58,3 @@ def calculate_logit_attributions(model: HookedTransformer) -> Tensor:
     )
 
     return attributions
-
-
-def neuron_ranking(values: Tensor) -> Tuple[List[List[int]], List[List[int]]]:
-    assert values.shape == (8, 2048)
-
-    ranks = []
-    sorted_neurons = []
-    for layer_values in values:
-        neuron_indices = list(enumerate(layer_values))
-        neuron_indices.sort(
-            reverse=True,
-            key=lambda x: x[1],
-        )
-        sorted_neurons.append([x[0] for x in neuron_indices])
-
-        layer_ranks = np.zeros(len(neuron_indices), dtype=np.int32)
-        for neuron_index, (rank, _) in enumerate(neuron_indices):
-            layer_ranks[neuron_index] = rank
-
-        assert len([x for x in layer_ranks if x == 0]) == 1
-        ranks.append(layer_ranks)
-
-    return ranks, sorted_neurons

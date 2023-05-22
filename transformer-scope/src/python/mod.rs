@@ -7,6 +7,15 @@ use crate::{
     html::template::{ArgumentError, NeuronTemplate},
 };
 
+#[pyfunction]
+fn setup_keyboard_interrupt() {
+    ctrlc::set_handler(move || {
+        println!("Keyboard interrupt received, exiting...");
+        std::process::abort();
+    })
+    .expect("Error setting Ctrl-C handler");
+}
+
 create_exception!(transformer_scope, PayloadBuildError, PyException);
 
 impl From<ArgumentError> for PyErr {
@@ -116,6 +125,7 @@ impl PyPayload {
 /// A Python module implemented in Rust.
 #[pymodule]
 fn transformer_scope(py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(setup_keyboard_interrupt, m)?)?;
     m.add_class::<PyPayloadBuilder>()?;
     m.add_class::<PyPayload>()?;
     m.add_class::<PyScope>()?;
