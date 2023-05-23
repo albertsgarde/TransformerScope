@@ -29,13 +29,13 @@ jobs:
     - name: Activate venv
       run: source .env/bin/activate
     - name: Install global dependencies
-      run: python -m pip install -r requirements.txt
+      run: .env/bin/python -m pip install -r requirements.txt
     - name: Build package
-      run: cd transformer-scope; maturin develop --release; cd ..
+      run: cd transformer-scope; .env/bin/python -m maturin develop --release; cd ..
     - name: Install OthelloScope dependencies
-      run: python -m pip install -r examples/othelloscope/requirements.txt
+      run: .env/bin/python -m pip install -r examples/othelloscope/requirements.txt
     - name: Run example
-      run: python -m examples.othelloscope.main
+      run: .env/bin/python -m examples.othelloscope.main
     - name: Check that payload was generated
       uses: andstor/file-existence-action@v1
       with:
