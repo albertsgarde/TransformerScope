@@ -9,11 +9,24 @@ use crate::{
 
 #[pyfunction]
 fn setup_keyboard_interrupt() {
-    ctrlc::set_handler(move || {
+    if let Err(error) = ctrlc::set_handler(move || {
         println!("Keyboard interrupt received, exiting...");
         std::process::abort();
-    })
-    .expect("Error setting Ctrl-C handler");
+    }) {
+        match error {
+            ctrlc::Error::MultipleHandlers => {
+                eprintln!("A handler already exists for keyboard interrupts.");
+            }
+            ctrlc::Error::NoSuchSignal(signal_type) => {
+                eprintln!("Signal type not found on system: {signal_type:?}");
+            }
+            ctrlc::Error::System(error) => {
+                eprintln!(
+                    "Unexpected system error while setting keyboard interrupt handler: {error}"
+                );
+            }
+        }
+    }
 }
 
 create_exception!(transformer_scope, PayloadBuildError, PyException);
