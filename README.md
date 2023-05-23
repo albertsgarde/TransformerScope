@@ -4,6 +4,7 @@ An interpretability tool for transformer models built on TransformerLens
 ## Contributor setup
 This guide will ensure you have the right environment and run the [othelloscope example](examples/othelloscope).
 Tested in Windows Subsystem for Linux with Ubuntu 22.04.2 LTS.
+Also see the [`environment.yml`](.github/workflows/environment.yml) workflow for a CI tested setup procedure.
 1. Ensure you have a working Python installation (at least version 3.7, tested with version 3.10.7).
 2. Ensure you have a working Rust toolchain. 
    See [here](https://www.rust-lang.org/tools/install) to get one.
