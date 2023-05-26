@@ -3,22 +3,25 @@ An interpretability tool for transformer models built on TransformerLens
 
 ## Contributor setup
 This guide will ensure you have the right environment and run the [othelloscope example](examples/othelloscope).
+You can of course
 Tested in Windows Subsystem for Linux with Ubuntu 22.04.2 LTS.
 Also see the [`environment.yml`](.github/workflows/environment.yml) workflow for a CI tested setup procedure.
 1. Ensure you have a working Python installation (at least version 3.7, tested with version 3.10.7).
-2. Ensure you have a working Rust toolchain. 
+2. Ensure you have a working Rust toolchain (if you can use the `cargo` command it should be fine). 
    See [here](https://www.rust-lang.org/tools/install) to get one.
    Any version from the last few years should work.
    The newest one definitely will.
 3. Clone the repo and move to the root.
-4. Set up a python environment using `python -m venv .env` and activate it.
-5. Install globally required packages by running `python -m pip install -r requirements.txt`.
-6. Build the package by moving to the `transformer-scope` directory and running `maturin develop --release`.
+4. Set up a python environment using `python -m venv .env`.
+5. Activate the environment.
+6. Install globally required packages by running `python -m pip install -r requirements.txt`.
+7. Build the package by moving to the `transformer-scope` directory and running `maturin develop --release`.
    The package will now be installed in your environment.
 7. Move back to the root and run `python -m pip install -r examples/othelloscope/requirements.txt` to install the example's dependencies.
 8. Run `python -m examples.othelloscope.main` and wait as the example runs.
 9. Run `cargo run --release -- examples/othelloscope/output/payload` to start the server.
-10. Visit [localhost:8080](localhost:8080) in a browser to view the website.
+10. Wait until it displays the message `Serving site...`.
+11. Visit [localhost:8080](localhost:8080) in a browser to view the website.
 
 ### Windows notes
 On Windows, Maturin works less well, but there are work arounds.
