@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import functional
 from transformer_lens import HookedTransformer
+import transformer_scope as ts
 
 
 def int_to_label(i: int) -> str:
@@ -34,20 +35,14 @@ def calculate_heatmaps(
 
 
 def calculate_logit_attributions(model: HookedTransformer) -> Tensor:
-    # A tensor of shape (num_layers, num_neurons, num_features)
-    w_out = model.W_out
-    num_layers, num_neurons, num_features = w_out.shape
-    # The unembedding matrix without the pass action.
-    # Shape (num_features, num_actions-1)
-    unembedding_matrix = model.W_U[:, 1:]
-    num_features2, num_actions = unembedding_matrix.shape
-    assert num_features2 == num_features
-    # Set of board position indices affected by actions
+    raw_attributions = ts.logit_attributions(model)
+    num_layers, num_neurons, num_actions = raw_attributions.shape
     board_positions = list(range(0, 27)) + list(range(29, 35)) + list(range(37, 64))
     assert len(board_positions) == 60
-    assert num_actions == 60
-    attributions = torch.zeros(num_layers, num_neurons, 64, device=w_out.device)
-    attributions[:, :, board_positions] = w_out @ unembedding_matrix
+    attributions = torch.zeros(
+        num_layers, num_neurons, 64, device=raw_attributions.device
+    )
+    attributions[:, :, board_positions] = raw_attributions[:, :, 1:]
     attributions = attributions.reshape(num_layers, num_neurons, 8, 8)
 
     assert (
