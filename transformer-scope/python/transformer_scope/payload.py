@@ -2,12 +2,14 @@ from . import transformer_scope as ts
 
 import numpy as np
 
+
 class Payload:
     def to_file(self, path: str) -> None:
         self.payload.to_file(path)
-    
+
     def generate_site_files(self, dir_path: str) -> None:
         self.payload.generate_site_files(dir_path)
+
 
 class PayloadBuilder:
     def __init__(self, num_layers: int, num_mlp_neurons: int):
@@ -19,7 +21,7 @@ class PayloadBuilder:
 
     def mlp_neuron_template(self, template: str) -> None:
         self.payload_builder.mlp_neuron_template(template)
-    
+
     def add_str_value(self, key: str, value: np.ndarray, scope: ts.Scope) -> None:
         self.payload_builder.add_str_value(key, value, scope)
 
@@ -28,7 +30,7 @@ class PayloadBuilder:
 
     def add_f32_value(self, key: str, value: np.ndarray, scope: ts.Scope) -> None:
         self.payload_builder.add_f32_value(key, value, scope)
-    
+
     def set_rank_values(self, key: str) -> None:
         self.payload_builder.set_rank_values(key)
 
