@@ -6,6 +6,8 @@ const COLOR_ZERO: [f32; 3] = [0., 0., 0.];
 const COLOR_NEGATIVE: [f32; 3] = [255., 0., 0.];
 
 pub fn interpolate_color(value: f32) -> [u8; 3] {
+    let value = value.clamp(-1., 1.);
+
     let interpolation_color = if value > 0. {
         COLOR_POSITIVE
     } else {

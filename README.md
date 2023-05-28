@@ -1,5 +1,5 @@
 # TransformerScope
-An interpretability tool for transformer models built on TransformerLens
+An interpretability tool for transformer models built on [TransformerLens](https://github.com/neelnanda-io/TransformerLens)
 
 ## Contributor setup
 This guide will ensure you have the right environment and run the [othelloscope example](examples/othelloscope).
@@ -28,3 +28,15 @@ On Windows, Maturin works less well, but there are work arounds.
 2. When building with Maturin, if you get the error `Invalid python interpreter version` or `Unsupported Python interpreter`, this is likely because Maturin fails to find your environment's interpreter.
 To fix this, instead of building with `maturin develop`, use `maturin build --release -i py.exe` (maybe replace `py.exe` with e.g. `python3.exe` if that is how you call Python) and then call `python -m pip install .`.
 The `-i` argument tells Maturin the name of the Python interpreter to use.
+
+### M1 notes
+Problems arise when your Python version does not match your machines architecture.
+This can happen on M1 chips, since x86 Python runs even if the architecture is ARM.
+In this case you can get an error that looks like 
+```
+error[E0463]: can't find crate for `core`
+  |
+  = note: the `x86_64-apple-darwin` target may not be installed
+  = help: consider downloading the target with `rustup target add x86_64-apple-darwin
+``` 
+Simply download the x86 target with the suggested command and everything should work.
