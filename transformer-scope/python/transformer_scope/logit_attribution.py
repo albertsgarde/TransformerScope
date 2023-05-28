@@ -1,8 +1,8 @@
-from transformer_lens import HookedTransformer
 from torch import Tensor
+from transformer_lens import HookedTransformer
 
 
-def logit_attributions(model: HookedTransformer) -> Tensor:
+def mlp_logit_attributions(model: HookedTransformer) -> Tensor:
     """
     Returns a tensor that describes how much each neuron in MLP layers directly affect the logits.
 

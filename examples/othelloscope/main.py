@@ -5,10 +5,9 @@ import numpy as np
 import torch
 import transformer_lens
 from transformer_lens import HookedTransformer, HookedTransformerConfig
+from transformer_scope import Payload, PayloadBuilder, Scope
 
 from examples.othelloscope import calculations
-
-from transformer_scope import PayloadBuilder, Payload, Scope
 
 path = os.path.dirname(os.path.realpath(__file__))
 

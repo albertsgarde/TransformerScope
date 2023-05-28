@@ -1,6 +1,6 @@
-from . import transformer_scope as ts
-
 import numpy as np
+
+from . import transformer_scope as ts
 
 
 class Payload:
