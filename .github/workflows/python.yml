@@ -1,0 +1,23 @@
+name: Python
+
+on:
+  pull_request:
+    branches: 
+      - "main"
+
+jobs:
+  python-checks:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+    steps:
+    - name: Check formatting
+      run: |
+      pip install isort black
+      python -m isort --check-only .
+      python -m black --check .

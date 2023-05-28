@@ -1,10 +1,11 @@
 from typing import List, Tuple
+
 import numpy as np
 import torch
+import transformer_scope as ts
 from torch import Tensor
 from torch.nn import functional
 from transformer_lens import HookedTransformer
-import transformer_scope as ts
 
 
 def int_to_label(i: int) -> str:
@@ -35,13 +36,15 @@ def calculate_heatmaps(
 
 
 def calculate_logit_attributions(model: HookedTransformer) -> Tensor:
-    raw_attributions = ts.logit_attributions(model)
+    raw_attributions = ts.mlp_logit_attributions(model)
     num_layers, num_neurons, num_actions = raw_attributions.shape
+    # Set of board position indices affected by actions
     board_positions = list(range(0, 27)) + list(range(29, 35)) + list(range(37, 64))
     assert len(board_positions) == 60
     attributions = torch.zeros(
         num_layers, num_neurons, 64, device=raw_attributions.device
     )
+    # Remove the pass action and add the four middle cells.
     attributions[:, :, board_positions] = raw_attributions[:, :, 1:]
     attributions = attributions.reshape(num_layers, num_neurons, 8, 8)
 
