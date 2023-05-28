@@ -1,5 +1,5 @@
 # TransformerScope
-An interpretability tool for transformer models built on TransformerLens
+An interpretability tool for transformer models built on [TransformerLens](https://github.com/neelnanda-io/TransformerLens)
 
 ## Contributor setup
 This guide will ensure you have the right environment and run the [othelloscope example](examples/othelloscope).
