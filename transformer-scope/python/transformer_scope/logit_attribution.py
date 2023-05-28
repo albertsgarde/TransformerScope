@@ -18,7 +18,7 @@ def mlp_logit_attributions(model: HookedTransformer) -> Tensor:
     unembedding_matrix = model.W_U
     num_residuals2, num_token_values = unembedding_matrix.shape
     assert num_residuals2 == num_residuals
-
+    # Shape (num_layers, num_neurons, num_token_values)
     attributions = w_out @ unembedding_matrix
     attr_layers, attr_neurons, attr_token_values = attributions.shape
     assert attr_layers == num_layers
