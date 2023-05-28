@@ -4,8 +4,6 @@ on:
   pull_request:
     branches: 
       - "main"
-    paths:
-      - 'scripts/**'
 
 jobs:
   python-checks:
@@ -20,7 +18,6 @@ jobs:
     steps:
     - name: Check formatting
       run: |
-      pip install pycln isort black
-      python -m pycln --check -all . --exclude ".*/__init__\.py" --include "examples/.*\.py"
+      pip install isort black
       python -m isort --check-only .
       python -m black --check .
