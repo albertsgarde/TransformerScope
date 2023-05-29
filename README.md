@@ -31,7 +31,7 @@ The `-i` argument tells Maturin the name of the Python interpreter to use.
 
 ### M1 notes
 Problems arise when your Python version does not match your machines architecture.
-This can happen on M1 chips, since x86 Python runs even if the architecture is ARM.
+This can happen on M1 chips, since it is possible to run x86 Python even if the architecture is ARM.
 In this case you can get an error that looks like 
 ```
 error[E0463]: can't find crate for `core`
